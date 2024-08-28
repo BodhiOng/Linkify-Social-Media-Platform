@@ -1,18 +1,13 @@
 const mongoose = require('mongoose');
-const Schema = mongoose.Schema;
 
-const postSchema = new Schema({
+const PostSchema = new mongoose.Schema({
+    user_id: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     content: { type: String, required: true },
-    image_url: { type: String, default: '' },
-    author: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    image_url: { type: String },
     created_at: { type: Date, default: Date.now },
-    updated_at: { type: Date, default: Date.now }
+    updated_at: { type: Date, default: Date.now },
+    likes_count: { type: Number, default: 0 },
+    comments_count: { type: Number, default: 0 },
 });
 
-postSchema.pre('save', function (next) {
-    this.updated_at = Date.now();
-    next();
-});
-
-const Post = mongoose.model('Post', postSchema);
-module.exports = Post;
+module.exports = mongoose.model('Post', PostSchema);
