@@ -17,9 +17,14 @@ app.use(express.urlencoded({ extended: true }));
 
 // Routes setup
 const userRoutes = require('./routes/users');
+const postRoutes = require('./routes/posts');
+const commentRoutes = require('./routes/comments');
+const likeRoutes = require('./routes/likes');
 
-// app.use('/auth', authRoutes);
 app.use('/users', userRoutes);
+app.use('/posts', postRoutes);
+app.use('/comments', commentRoutes);
+app.use('/likes', likeRoutes);
 
 // Error handling
 app.use((req, res, next) => {
