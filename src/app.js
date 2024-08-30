@@ -31,7 +31,10 @@ const commentRoutes = require('./routes/comments');
 const likeRoutes = require('./routes/likes');
 const followRoutes = require('./routes/follow');
 const notificationRoutes = require('./routes/notifications');
+const feedRoutes = require('./routes/feed');
+const messageRoutes = require('./routes/messages');
 
+app.use('/', feedRoutes);
 app.use('/auth', authRoutes);
 app.use('/users', userRoutes);
 app.use('/posts', postRoutes);
@@ -39,6 +42,7 @@ app.use('/comments', commentRoutes);
 app.use('/likes', likeRoutes);
 app.use('/follow', followRoutes);
 app.use('/notifications', notificationRoutes);
+app.use('/messages', messageRoutes);
 
 // Test route
 app.get('/test', (req, res) => {
