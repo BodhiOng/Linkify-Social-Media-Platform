@@ -33,7 +33,7 @@ router.post('/register',
 
             // Hash the password
             const salt = await bcrypt.genSalt(10);
-            const hashedPassword = await bcrypt.hash(password, salt);
+            const hashedPassword = await bcrypt.hash(password, salt);   
 
             // Create a new user
             user = new User({
@@ -101,5 +101,10 @@ router.get('/me', verifyToken, async (req, res) => {
     }
 });
 
+// Logout endpoint
+router.post('/logout', verifyToken, (req, res) => {
+    // Invalidate the token on the client-side
+    res.json({ message: "User logged out successfully" });
+});
 
 module.exports = router;

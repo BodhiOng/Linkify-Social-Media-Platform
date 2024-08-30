@@ -13,7 +13,6 @@ const verifyToken = (req, res, next) => {
         req.user = decoded; // Attach the decoded payload to the request object
         next();
     } catch (err) {
-        console.log("Token is not valid:", err.message);
         res.status(401).json({ error: 'Token is not valid' });
     }
 };

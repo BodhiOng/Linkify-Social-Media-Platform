@@ -1,7 +1,10 @@
 require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
+const rateLimitMiddleware = require('./middlewares/rateLimit');
 const app = express();
+
+// Import port and connectionstring from .env
 const port = process.env.PORT || 3000;
 const MONGODB_URI = process.env.MONGODB_URI;
 
@@ -18,6 +21,7 @@ mongoose.connect(MONGODB_URI, {
 // Middleware setup
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(rateLimitMiddleware);
 
 // Routes setup
 const authRoutes = require('./routes/auth');
@@ -27,7 +31,6 @@ const commentRoutes = require('./routes/comments');
 const likeRoutes = require('./routes/likes');
 const followRoutes = require('./routes/follow');
 const notificationRoutes = require('./routes/notifications');
-const verifyToken = require('./middlewares/auth');
 
 app.use('/auth', authRoutes);
 app.use('/users', userRoutes);
@@ -45,11 +48,6 @@ app.get('/test', (req, res) => {
 // Error handling
 app.use((req, res, next) => {
     res.status(404).send('Sorry, page not found');
-});
-
-app.get('/protected', verifyToken, (req, res) => {
-    console.log("User:", req.user);  // Log the decoded token
-    res.json({ message: "This is a protected route", user: req.user });
 });
 
 // Starting the server
