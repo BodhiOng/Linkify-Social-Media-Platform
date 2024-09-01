@@ -3,7 +3,6 @@ const router = express.Router();
 const Message = require('../models/Message');
 const verifyToken = require('../middlewares/auth');
 
-
 // GET /messages/:userId - Retrieve messages between the authenticated user and another user
 router.get('/messages/:userId', verifyToken, async (req, res) => {
     try {

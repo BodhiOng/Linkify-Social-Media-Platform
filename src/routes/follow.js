@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
 const Follow = require('../models/Follow');
-const User = require('../models/User');
 
 // Follow a user
 router.post('/', async (req, res) => {
