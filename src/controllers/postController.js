@@ -1,4 +1,5 @@
 const Post = require('../models/Post');
+const User = require('../models/User');
 
 // Create a new post
 exports.createPost = async (req, res) => {
@@ -22,7 +23,7 @@ exports.createPost = async (req, res) => {
 // Get all posts
 exports.getAllPosts = async (req, res) => {
     try {
-        const posts = await Post.find().populate('_id', 'username');
+        const posts = await Post.find().populate('user_id', 'username');
         res.status(200).json(posts);
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -32,7 +33,12 @@ exports.getAllPosts = async (req, res) => {
 // Get posts by username
 exports.getPostsByUsername = async (req, res) => {
     try {
-        const posts = await Post.find({ user_id: req.params.username }).populate('user_id', 'username');
+        const user = await User.findOne({ username: req.params.username });
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        const posts = await Post.find({ user_id: user._id }).populate('user_id', 'username');
         if (posts.length === 0) {
             return res.status(404).json({ message: 'No posts found for this user' });
         }
@@ -58,7 +64,7 @@ exports.updatePostById = async (req, res) => {
         const { content } = req.body;
         const updatedPost = await Post.findByIdAndUpdate(
             req.params.id,
-            { content, updated_at: Date.now() },
+            { content },
             { new: true, runValidators: true }
         );
 
@@ -80,7 +86,7 @@ exports.deletePostById = async (req, res) => {
             return res.status(403).json({ message: 'You are not allowed to delete this post' });
         }
 
-        await post.remove();
+        await Post.findByIdAndDelete(req.params.id);
         res.status(200).json({ message: 'Post deleted' });
     } catch (err) {
         res.status(500).json({ error: err.message });
