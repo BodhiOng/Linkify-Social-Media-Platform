@@ -1,11 +1,9 @@
-const express = require('express');
-const router = express.Router();
-const Comment = require('../models/Comment');
-const Post = require('../models/Post');
-const User = require('../models/User');
+const Comment = require('../models/commentModel');
+const Post = require('../models/postModel');
+const User = require('../models/userModel');
 
 // Create a new comment
-router.post('/', async (req, res) => {
+exports.createComment = async (req, res) => {
     try {
         const { post_id, user_id, content } = req.body;
 
@@ -37,20 +35,20 @@ router.post('/', async (req, res) => {
     } catch (error) {
         res.status(500).json({ error: 'Server error' });
     }
-});
+};
 
 // Get all comments for a specific post
-router.get('/post/:postId', async (req, res) => {
+exports.getCommentsByPost = async (req, res) => {
     try {
         const comments = await Comment.find({ post_id: req.params.postId }).populate('user_id', 'username');
         res.status(200).json(comments);
     } catch (error) {
         res.status(500).json({ error: 'Server error' });
     }
-});
+};
 
 // Update a comment
-router.put('/:id', async (req, res) => {
+exports.updateCommentById = async (req, res) => {
     try {
         const { content } = req.body;
 
@@ -67,10 +65,10 @@ router.put('/:id', async (req, res) => {
     } catch (error) {
         res.status(500).json({ error: 'Server error' });
     }
-});
+};
 
 // Delete a comment
-router.delete('/:id', async (req, res) => {
+exports.deleteCommentById = async (req, res) => {
     try {
         const comment = await Comment.findById(req.params.id);
         if (!comment) {
@@ -88,6 +86,4 @@ router.delete('/:id', async (req, res) => {
     } catch (error) {
         res.status(500).json({ error: 'Server error' });
     }
-});
-
-module.exports = router;
+};

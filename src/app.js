@@ -1,7 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
-const rateLimitMiddleware = require('./middlewares/rateLimit');
+const rateLimitMiddleware = require('./middlewares/rateLimitMiddleware');
 const app = express();
 
 // Import port and connectionstring from .env
@@ -24,15 +24,15 @@ app.use(express.urlencoded({ extended: true }));
 app.use(rateLimitMiddleware);
 
 // Routes setup
-const authRoutes = require('./routes/auth');
-const userRoutes = require('./routes/users');
-const postRoutes = require('./routes/posts');
-const commentRoutes = require('./routes/comments');
-const likeRoutes = require('./routes/likes');
-const followRoutes = require('./routes/follow');
-const notificationRoutes = require('./routes/notifications');
-const feedRoutes = require('./routes/feed');
-const messageRoutes = require('./routes/messages');
+const authRoutes = require('./routes/authRoutes');
+const userRoutes = require('./routes/userRoutes');
+const postRoutes = require('./routes/postRoutes');
+const commentRoutes = require('./routes/commentRoutes');
+const likeRoutes = require('./routes/likeRoutes');
+const followRoutes = require('./routes/followRoutes');
+const notificationRoutes = require('./routes/notificationRoutes');
+const feedRoutes = require('./routes/feedRoutes');
+const messageRoutes = require('./routes/messagesRoutes');
 
 app.use('/', feedRoutes);
 app.use('/auth', authRoutes);
@@ -40,7 +40,7 @@ app.use('/users', userRoutes);
 app.use('/posts', postRoutes);
 app.use('/comments', commentRoutes);
 app.use('/likes', likeRoutes);
-app.use('/follow', followRoutes);
+app.use('/follows', followRoutes);
 app.use('/notifications', notificationRoutes);
 app.use('/messages', messageRoutes);
 

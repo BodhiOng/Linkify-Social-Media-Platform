@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const verifyToken = require('../middlewares/auth');
-const Post = require('../models/Post');
+const verifyToken = require('../middlewares//authMiddleware');
+const Post = require('../models/postModel');
 
 // GET /feed - Retrieve the home feed with posts from all users
 router.get('/feed', verifyToken, async (req, res) => {

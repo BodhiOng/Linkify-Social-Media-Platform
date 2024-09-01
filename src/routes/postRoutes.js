@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
-const verifyToken = require('../middlewares/auth');
+const verifyToken = require('../middlewares/authMiddleware');
 const postController = require('../controllers/postController');
 
 // Configure multer for image uploads

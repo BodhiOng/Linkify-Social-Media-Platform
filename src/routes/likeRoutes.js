@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const Like = require('../models/Like');
-const Post = require('../models/Post');
-const User = require('../models/User');
+const Like = require('../models/likeModel');
+const Post = require('../models/postModel');
+const User = require('../models/userModel');
 
 // Create a new like
 router.post('/', async (req, res) => {
