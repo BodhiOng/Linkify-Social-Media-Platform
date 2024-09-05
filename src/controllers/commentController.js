@@ -5,7 +5,9 @@ const User = require('../models/userModel');
 // Create a new comment
 exports.createComment = async (req, res) => {
     try {
-        const { post_id, user_id, content } = req.body;
+        const { content } = req.body;
+        const post_id = req.params.postId;
+        const user_id = req.user.userId;
 
         // Check if post exists
         const post = await Post.findById(post_id);
@@ -21,7 +23,7 @@ exports.createComment = async (req, res) => {
 
         const comment = new Comment({
             post_id,
-            user_id,
+            user_id,    
             content,
         });
 
@@ -47,26 +49,6 @@ exports.getCommentsByPost = async (req, res) => {
     }
 };
 
-// Update a comment
-exports.updateCommentById = async (req, res) => {
-    try {
-        const { content } = req.body;
-
-        const comment = await Comment.findById(req.params.id);
-        if (!comment) {
-            return res.status(404).json({ error: 'Comment not found' });
-        }
-
-        comment.content = content;
-        comment.updated_at = Date.now();
-
-        await comment.save();
-        res.status(200).json(comment);
-    } catch (error) {
-        res.status(500).json({ error: 'Server error' });
-    }
-};
-
 // Delete a comment
 exports.deleteCommentById = async (req, res) => {
     try {
@@ -75,13 +57,18 @@ exports.deleteCommentById = async (req, res) => {
             return res.status(404).json({ error: 'Comment not found' });
         }
 
+        // Ensure the comment belongs to the authenticated user
+        if (comment.user_id.toString() !== req.user.userId) {
+            return res.status(403).json({ error: 'You are not allowed to delete this comment' });
+        }
+
         const post = await Post.findById(comment.post_id);
         if (post) {
             post.comments_count -= 1;
             await post.save();
         }
 
-        await comment.remove();
+        await Comment.deleteOne({ _id: req.params.id });
         res.status(200).json({ message: 'Comment deleted successfully' });
     } catch (error) {
         res.status(500).json({ error: 'Server error' });

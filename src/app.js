@@ -6,16 +6,16 @@ const app = express();
 
 // Import port and connectionstring from .env
 const port = process.env.PORT || 3000;
-const MONGODB_URI = process.env.MONGODB_URI;
+const mongoURI = process.env.MONGODB_URI;
 
 // Connect to MongoDB
-mongoose.connect(MONGODB_URI, {
+mongoose.connect(mongoURI, {
     serverSelectionTimeoutMS: 20000, // 20 seconds timeout
 })
-.then(() => console.log('Connected to MongoDB'))
-.catch(err => {
-    console.error('Failed to connect to MongoDB', err);
-    process.exit(1);
+    .then(() => console.log('Connected to MongoDB'))
+    .catch(err => {
+        console.error('Failed to connect to MongoDB', err);
+        process.exit(1);
 });
 
 // Middleware setup
