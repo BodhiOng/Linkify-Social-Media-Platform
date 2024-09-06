@@ -4,11 +4,15 @@ const User  =require('../models/userModel');
 // Follow a user
 exports.followUser = async (req, res) => {
     try {
-        const followerUsername = req.user.username;
+        const followerId = req.user.userId;
         const { followingUsername } = req.body;
 
-        const follower = await User.findOne({ username: followerUsername });
+        const follower = await User.findById(followerId);
         const following = await User.findOne({ username: followingUsername });
+
+        if (!follower) {
+            return res.status(400).json({ error: 'Follower not found' });
+        }
 
         if (!following) {
             return res.status(400).json({ error: 'User to follow not found' });
@@ -31,10 +35,10 @@ exports.followUser = async (req, res) => {
 // Unfollow a user
 exports.unfollowUser = async (req, res) => {
     try {
-        const followerUsername = req.user.username;
+        const followerId = req.user.userId;
         const { followingUsername } = req.body;
 
-        const follower = await User.findOne({ username: followerUsername });
+        const follower = await User.findById(followerId);
         const following = await User.findOne({ username: followingUsername });
 
         if (!following) {
@@ -52,20 +56,34 @@ exports.unfollowUser = async (req, res) => {
     }
 };
 
-// Get followers of a user
+// Get a list of a user's followers
 exports.getFollowers = async (req, res) => {
     try {
-        const followers = await Follow.find({ following_id: req.params.userId }).populate('follower_id', 'username');
+        const username = req.params.username || req.user.username;
+        const user = await User.findOne({ username });
+
+        if (!user) {
+            return res.status(404).json({ error: "User not found" });
+        }
+
+        const followers = await Follow.find({ following_id: user._id }).populate('follower_id', 'username');
         res.json(followers);
     } catch (err) {
         res.status(400).json({ error: err.message });
     }
 };
 
-// Get users that a user is following
+// Get the following list of a user
 exports.getFollowing = async (req, res) => {
     try {
-        const following = await Follow.find({ follower_id: req.params.userId }).populate('following_id', 'username');
+        const username = req.params.username || req.user.username;
+        const user = await User.findOne({ username });
+
+        if (!user) {
+            return res.status(404).json({ error: "User not found" });
+        }
+
+        const following = await Follow.find({ follower_id: user._id }).populate('following_id', 'username');
         res.json(following);
     } catch (err) {
         res.status(400).json({ error: err.message });

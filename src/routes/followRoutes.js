@@ -10,9 +10,9 @@ router.post('/', verifyToken, followController.followUser);
 router.delete('/', verifyToken, followController.unfollowUser);
 
 // Get followers of a user
-router.get('/followers/:userId', followController.getFollowers);
+router.get('/followers/:username', followController.getFollowers);
 
 // Get users that a user is following
-router.get('/following/:userId', followController.getFollowing);
+router.get('/following/:username', followController.getFollowing);
 
 module.exports = router;
