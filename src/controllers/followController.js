@@ -1,5 +1,6 @@
 const Follow = require('../models/followModel');
-const User  =require('../models/userModel');
+const User = require('../models/userModel');
+const Notification = require('../models/notificationModel');
 
 // Follow a user
 exports.followUser = async (req, res) => {
@@ -25,6 +26,15 @@ exports.followUser = async (req, res) => {
 
         const follow = new Follow({ follower_id: follower._id, following_id: following._id });
         await follow.save();
+
+        // Create a notification for the user being followed
+        const notification = new Notification({
+            user_id: following._id,
+            type: 'follow',
+            entity_id: follower._id, 
+            message: `${follower.username} started following you`,
+        });
+        await notification.save();
 
         res.status(201).json(follow);
     } catch (err) {
