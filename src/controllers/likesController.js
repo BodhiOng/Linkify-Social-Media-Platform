@@ -31,21 +31,25 @@ exports.createLike = async (req, res) => {
             post_id,
             user_id,
         });
-
         await like.save();
 
         // Increment likes count on the post
         post.likes_count += 1;
         await post.save();
 
-        // Create a notification for the post owner
+        // Fetch post owner's information
         const postOwner = await User.findById(post.user_id);
-        const notificationMessage = `${user.username} liked your post.`;
+
+        //  Include the post's message and image
+        const notificationMessage = `${user.username} liked on your post: "${post.content}"`;
+
+        // Create a like comment on the owner's end
         const notification = new Notification({
             user_id: postOwner._id,
             type: 'like',
-            entity_id: post._id,
+            entity_id: like._id,
             message: notificationMessage,
+            post_image_url: post.image_url,
         });
         await notification.save();
         

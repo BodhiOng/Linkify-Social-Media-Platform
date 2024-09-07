@@ -34,14 +34,19 @@ exports.createComment = async (req, res) => {
         post.comments_count += 1;
         await post.save();
 
-        // Create a notification for the post owner
+        // Fetch post owner's information
         const postOwner = await User.findById(post.user_id);
-        const notificationMessage = `${user.username} commented on your post.`;
+
+        //  Include the post's message and image
+        const notificationMessage = `${user.username} commented on your post: "${post.content}"`;
+        
+        // Create comment notification on the post owner's end
         const notification = new Notification({
             user_id: postOwner._id,
             type: 'comment',
             entity_id: comment._id,
             message: notificationMessage,
+            post_image_url: post.image_url,
         });
         await notification.save();
 
