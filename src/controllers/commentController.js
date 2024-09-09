@@ -22,22 +22,22 @@ exports.createComment = async (req, res) => {
             return res.status(404).json({ error: 'User not found' });
         }
 
+        // Create the new comment & save it
         const comment = new Comment({
             post_id,
             user_id,    
             content,
         });
-
         await comment.save();
 
         // Increment comments count on the post
         post.comments_count += 1;
         await post.save();
 
-        // Fetch post owner's information
+        // Fetch the post owner's information
         const postOwner = await User.findById(post.user_id);
 
-        //  Include the post's message and image
+        // Construct notification message for the post owner
         const notificationMessage = `${user.username} commented on your post: "${post.content}"`;
         
         // Create comment notification on the post owner's end
@@ -59,7 +59,9 @@ exports.createComment = async (req, res) => {
 // Get all comments for a specific post
 exports.getCommentsByPost = async (req, res) => {
     try {
+        // Fetch all comments on the specific post
         const comments = await Comment.find({ post_id: req.params.postId }).populate('user_id', 'username');
+        
         res.status(200).json(comments);
     } catch (error) {
         res.status(500).json({ error: 'Server error' });
@@ -69,6 +71,7 @@ exports.getCommentsByPost = async (req, res) => {
 // Delete a comment
 exports.deleteCommentById = async (req, res) => {
     try {
+        // Find comment by its ID
         const comment = await Comment.findById(req.params.id);
         if (!comment) {
             return res.status(404).json({ error: 'Comment not found' });
@@ -79,13 +82,14 @@ exports.deleteCommentById = async (req, res) => {
             return res.status(403).json({ error: 'You are not allowed to delete this comment' });
         }
 
+        //  Find the associated post and decrement the comment count
         const post = await Post.findById(comment.post_id);
         if (post) {
             post.comments_count -= 1;
             await post.save();
         }
-
         await Comment.deleteOne({ _id: req.params.id });
+        
         res.status(200).json({ message: 'Comment deleted successfully' });
     } catch (error) {
         res.status(500).json({ error: 'Server error' });
