@@ -35,12 +35,19 @@ exports.registerUser = async (req, res) => {
         });
         await user.save();
 
-        // Create a payload for JWT that contains the user ID
+        // Create payload for the access token
         const payload = { userId: user.id };
-        // Sign the JWT token with the secret and set it to expire in 1 hour
-        const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '1h' });
 
-        res.status(201).json({ token });
+        // Generate short-lived access token (e.g., expires in 15 minutes)
+        const accessToken = jwt.sign(payload, JWT_SECRET, { expiresIn: '15m' });
+
+        // Generate refresh token (longer expiration, e.g., 7 days)
+        const refreshToken = jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' });
+
+        // Store refresh token securely (e.g., in database or an HTTP-only cookie)
+        res.cookie('refreshToken', refreshToken, { httpOnly: true, secure: process.env.NODE_ENV === 'production' });
+
+        res.status(201).json({ message: 'Register successful', accessToken });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -68,15 +75,20 @@ exports.loginUser = async (req, res) => {
         if (!isMatch) {
             return res.status(400).json({ error: 'Invalid credentials' });
         }
-        // Create a payload for JWT that contains the user ID
+
+        // Create payload for the access token
         const payload = { userId: user.id };
-        // Sign the JWT token with the secret and set it to expire in 1 hour
-        const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '1h' });
 
-        // Token tweaks for security and production purposes
-        res.cookie('token', token, { httpOnly: true, secure: process.env.NODE_ENV === 'production' });
+        // Generate short-lived access token (e.g., expires in 15 minutes)
+        const accessToken = jwt.sign(payload, JWT_SECRET, { expiresIn: '15m' });
 
-        res.status(200).json({ message: 'Login successful', token });
+        // Generate refresh token (longer expiration, e.g., 7 days)
+        const refreshToken = jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' });
+
+        // Store refresh token securely (e.g., in database or an HTTP-only cookie)
+        res.cookie('refreshToken', refreshToken, { httpOnly: true, secure: process.env.NODE_ENV === 'production' });
+
+        res.status(200).json({ message: 'Login successful', accessToken });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -84,5 +96,26 @@ exports.loginUser = async (req, res) => {
 
 // Log out the user
 exports.logoutUser = (req, res) => {
+    res.clearCookie('refreshToken');
     res.json({ message: "User logged out successfully" });
+};
+
+// Refresh access token
+exports.refreshAccessToken = async (req, res) => {
+    const refreshToken = req.cookies.refreshToken; // Get the refresh token from the cookie
+    if (!refreshToken) {
+        return res.status(401).json({ error: 'No refresh token provided' });
+    }
+
+    try {
+        const decoded = jwt.verify(refreshToken, JWT_SECRET);
+        const payload = { userId: decoded.userId };
+
+        // Generate a new access token
+        const newAccessToken = jwt.sign(payload, JWT_SECRET, { expiresIn: '15m' });
+
+        res.status(200).json({ accessToken: newAccessToken });
+    } catch (err) {
+        res.status(403).json({ error: 'Invalid refresh token' });
+    }
 };
