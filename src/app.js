@@ -3,6 +3,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const rateLimitMiddleware = require('./middlewares/rateLimitMiddleware');
 const app = express();
+const cookieParser = require('cookie-parser');
 
 // Import port and connectionstring from .env
 const port = process.env.PORT || 3000;
@@ -22,6 +23,7 @@ mongoose.connect(mongoURI, {
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(rateLimitMiddleware);
+app.use(cookieParser());
 
 // Routes setup
 const authRoutes = require('./routes/authRoutes');

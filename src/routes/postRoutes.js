@@ -41,11 +41,16 @@ const upload = multer({
     }
 });
 
-// Define routes and map them to controller functions
+// Create a new post
 router.post('/', verifyToken, upload.single('image'), postController.createPost);
-router.get('/', postController.getAllPosts);
+
+// Get posts by username
 router.get('/:username', postController.getPostsByUsername);
+
+// Update a post by its ID
 router.put('/:id', verifyToken, postController.updatePostById);
+
+// Delete a post by its ID
 router.delete('/:id', verifyToken, postController.deletePostById);
 
 module.exports = router;

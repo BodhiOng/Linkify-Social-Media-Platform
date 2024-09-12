@@ -102,16 +102,20 @@ exports.logoutUser = (req, res) => {
 
 // Refresh access token
 exports.refreshAccessToken = async (req, res) => {
-    const refreshToken = req.cookies.refreshToken; // Get the refresh token from the cookie
+    // Extract the refresh token from the cookie & check whether it's provided or not
+    const refreshToken = req.cookies.refreshToken;
     if (!refreshToken) {
         return res.status(401).json({ error: 'No refresh token provided' });
     }
 
     try {
+        // Verify the refresh token using the secret key
         const decoded = jwt.verify(refreshToken, JWT_SECRET);
+
+        // Create a payload for the new access token using the user ID from the decoded token
         const payload = { userId: decoded.userId };
 
-        // Generate a new access token
+        // Generate a new access token with short expiration time
         const newAccessToken = jwt.sign(payload, JWT_SECRET, { expiresIn: '15m' });
 
         res.status(200).json({ accessToken: newAccessToken });
