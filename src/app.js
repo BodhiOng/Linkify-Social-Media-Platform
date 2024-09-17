@@ -4,6 +4,14 @@ const mongoose = require('mongoose');
 const rateLimitMiddleware = require('./middlewares/rateLimitMiddleware');
 const app = express();
 const cookieParser = require('cookie-parser');
+const http = require('http');
+const socketIo = require('socket.io');
+
+// Create HTTP server
+const server = http.createServer(app);
+
+// Initialize Socket.IO
+const io = socketIo(server);
 
 // Import port and connectionstring from .env
 const port = process.env.PORT || 3000;
@@ -24,6 +32,26 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(rateLimitMiddleware);
 app.use(cookieParser());
+
+// Socket IO connection handling
+io.on('connection', (socket) => {
+    console.log("A user connected");
+
+    // Join a room for the user (with their user ID)
+    socket.on('joinUser', (userId) => {
+        socket.join(userId);
+    });
+
+    // Join a room for a post (using the post ID)
+    socket.on('joinPost', (postId) => {
+        socket.join(postId);
+    });
+    
+    // Handle disconnection
+    socket.on('disconnect', () => {
+        console.log("User disconnected");
+    });
+})
 
 // Routes setup
 const authRoutes = require('./routes/authRoutes');
@@ -60,3 +88,6 @@ app.use((req, res, next) => {
 app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
 });
+
+// Make io accessible to other modules
+app.set('io', io);

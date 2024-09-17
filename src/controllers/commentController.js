@@ -50,6 +50,30 @@ exports.createComment = async (req, res) => {
         });
         await notification.save();
 
+        // Emit socket event for real-time update
+        io.to(post_id).emit('newComment', {
+            comment: {
+                _id: comment._id,
+                content: comment.content,
+                user: {
+                    _id: user._id,
+                    username: user.username
+                },
+                created_at: comment.created_at
+            },
+            post_id: post_id
+        });
+
+        // Emit notification to post owner
+        io.to(postOwner._id.toString()).emit('newNotification', {
+            notification: {
+                _id: notification._id,
+                type: notification.type,
+                message: notification.message,
+                createdAt: notification.createdAt
+            }
+        });
+
         res.status(201).json(comment);
     } catch (error) {
         res.status(500).json({ error: 'Server error' });
