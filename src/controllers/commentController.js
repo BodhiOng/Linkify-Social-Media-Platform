@@ -10,6 +10,7 @@ exports.createComment = async (req, res) => {
         const post_id = req.params.postId;
         const user_id = req.user.userId;
 
+
         // Check if post exists
         const post = await Post.findById(post_id);
         if (!post) {
@@ -51,31 +52,35 @@ exports.createComment = async (req, res) => {
         await notification.save();
 
         // Emit socket event for real-time update
-        io.to(post_id).emit('newComment', {
-            comment: {
-                _id: comment._id,
-                content: comment.content,
-                user: {
-                    _id: user._id,
-                    username: user.username
+        const io = req.app.get('io');
+        if (io) {
+            io.to(post_id.toString()).emit('newComment', {
+                comment: {
+                    _id: comment._id,
+                    content: comment.content,
+                    user: {
+                        _id: user._id,
+                        username: user.username
+                    },
+                    created_at: comment.created_at
                 },
-                created_at: comment.created_at
-            },
-            post_id: post_id
-        });
+                post_id: post_id
+            });
 
-        // Emit notification to post owner
-        io.to(postOwner._id.toString()).emit('newNotification', {
-            notification: {
-                _id: notification._id,
-                type: notification.type,
-                message: notification.message,
-                createdAt: notification.createdAt
-            }
-        });
+            // Emit notification to post owner
+            io.to(postOwner._id.toString()).emit('newNotification', {
+                notification: {
+                    _id: notification._id,
+                    type: notification.type,
+                    message: notification.message,
+                    createdAt: notification.createdAt
+                }
+            });
+        }
 
         res.status(201).json(comment);
     } catch (error) {
+        console.error('Error in createComment:', error);
         res.status(500).json({ error: 'Server error' });
     }
 };
