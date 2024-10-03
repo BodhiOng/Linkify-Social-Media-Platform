@@ -13,6 +13,7 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@types/react-dom": "^18.3.0",
     "bcryptjs": "^2.4.3",
     "chai-http": "^4.3.0",
     "cookie-parser": "^1.4.6",
@@ -35,6 +36,7 @@
     "@babel/core": "^7.25.2",
     "@babel/preset-env": "^7.25.4",
     "@babel/register": "^7.24.6",
+    "@types/react": "^18.3.11",
     "autoprefixer": "^10.4.20",
     "chai": "^5.1.1",
     "cross-env": "^7.0.3",
@@ -45,6 +47,7 @@
     "sinon": "^18.0.0",
     "socket.io-client": "^4.7.5",
     "supertest": "^7.0.0",
-    "tailwindcss": "^3.4.13"
+    "tailwindcss": "^3.4.13",
+    "typescript": "^5.6.2"
   }
 }
