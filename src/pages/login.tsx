@@ -2,26 +2,49 @@ import React, { useState, ChangeEvent, FormEvent } from 'react';
 import Linkify from '../components/Linkify';
 
 interface FormData {
-  username: string;
+  email: string;
   password: string;
 }
 
 const Login: React.FC = () => {
-  const [formData, setFormData] = useState<FormData>({ username: '', password: '' });
+  const [formData, setFormData] = useState<FormData>({ email: '', password: '' });
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>): void => {
     const { name, value } = e.target;
     setFormData((prevData) => ({
       ...prevData,
-      [name]: value,
+      [name]: value.trim(),
     }));
   };
 
-  const handleSubmit = (e: FormEvent<HTMLFormElement>): void => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
     console.log('Form data:', formData);
+
+    try {
+      const response = await fetch('/api/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await response.json();
+
+      if(response.ok) {
+        console.log("Login successful: ", data);
+      } else {
+        console.log("Login error: ", data.message);
+        alert(data.message);
+      }
+    } catch (error) {
+      console.error("Error occured during login: ", error);
+      alert("An error occured. Please try again.")
+    }
   };
 
+  
   return (
     <div className="flex items-center justify-center h-screen bg-slate-900 px-4 sm:px-6 lg:px-8">
       <div className="flex flex-col md:flex-row w-full h-auto md:h-5/6 bg-transparent rounded-lg shadow-lg overflow-hidden desktop:max-w-7xl laptop:max-w-5xl tablet:shadow-none mobile:shadow-none">
@@ -32,14 +55,14 @@ const Login: React.FC = () => {
             <h2 className="text-xl sm:text-2xl font-black text-center text-slate-100 mt-6 sm:mt-10 mb-4 sm:mb-8">Login</h2>
             <form onSubmit={handleSubmit}>
               <div className="mb-4">
-                <label htmlFor="username" className="block text-slate-100 font-medium font-bold mb-2">
+                <label htmlFor="email" className="block text-slate-100 font-medium font-bold mb-2">
                   Username
                 </label>
                 <input
-                  type="text"
-                  name="username"
-                  id="username"
-                  value={formData.username}
+                  type="email"
+                  name="email"
+                  id="email"
+                  value={formData.email}
                   onChange={handleChange}
                   className="w-full px-3 py-2 sm:px-4 sm:py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 mb-2"
                   required

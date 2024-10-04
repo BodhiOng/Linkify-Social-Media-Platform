@@ -14,9 +14,9 @@ router.post('/register',
 );
 
 // User login
-router.post('/login',
-    body('email').isEmail().withMessage('Please provide a valid email'),
-    body('password').exists().withMessage('Password is required'),
+router.post('/api/login',
+    // body('email').isEmail().withMessage('Please provide a valid email'),
+    // body('password').exists().withMessage('Password is required'),
     authController.loginUser
 );
 

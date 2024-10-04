@@ -1,5 +1,5 @@
 // Load environment variables from .env file
-require('dotenv').config();
+require('dotenv').config({ path: '../.env'});
 
 // Import required modules
 const express = require('express');
@@ -25,6 +25,7 @@ const app = express();
 // Import port and connectionstring from .env
 const port = process.env.PORT || 3000;
 const mongoURI = process.env.MONGODB_URI;
+console.log(mongoURI)
 
 nextApp.prepare().then(() => {
     // Create HTTP server
@@ -109,3 +110,5 @@ nextApp.prepare().then(() => {
     // Make io accessible to other modules
     app.set('io', io);
 });
+
+module.exports = { port };
