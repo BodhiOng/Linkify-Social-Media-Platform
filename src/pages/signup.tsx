@@ -6,7 +6,7 @@ interface FormData {
   password: string;
 }
 
-const Login: React.FC = () => {
+const SignUp: React.FC = () => {
   const [formData, setFormData] = useState<FormData>({ username: '', password: '' });
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>): void => {
@@ -23,13 +23,22 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="flex items-center justify-center h-screen bg-slate-900 px-4 sm:px-6 lg:px-8">
+    <div className="flex items-center justify-center h-screen bg-slate-900">
       <div className="flex flex-col md:flex-row w-full h-auto md:h-5/6 bg-transparent rounded-lg shadow-lg overflow-hidden desktop:max-w-7xl laptop:max-w-5xl tablet:shadow-none mobile:shadow-none">
-        {/* Left side - Login Form */}
+        {/* Left side - Image */}
+        <div className="hidden laptop:block w-1/2 desktop:w-1/2 h-auto">
+          <img
+            src="/images/linkify-signup.png"
+            alt="Sign up illustration"
+            className="w-full h-full object-cover"
+          />
+        </div>
+
+        {/* Right side - Sign up form */}
         <div className="flex items-center justify-center w-full bg-slate-800 p-6 sm:p-8 desktop:w-1/2 desktop:bg-slate-800 laptop:w-1/2 laptop:bg-slate-800 tablet:bg-slate-900 mobile:bg-slate-900">
           <div className="flex flex-col justify-center w-full">
             <Linkify />
-            <h2 className="text-xl sm:text-2xl font-black text-center text-slate-100 mt-6 sm:mt-10 mb-4 sm:mb-8">Login</h2>
+            <h2 className="text-xl sm:text-2xl font-black text-center text-slate-100 mt-6 sm:mt-10 mb-4 sm:mb-8">Sign up</h2>
             <form onSubmit={handleSubmit}>
               <div className="mb-4">
                 <label htmlFor="username" className="block text-slate-100 font-medium font-bold mb-2">
@@ -63,26 +72,17 @@ const Login: React.FC = () => {
                 type="submit"
                 className="w-full bg-indigo-500 text-white text-lg py-3 sm:py-4 rounded-md hover:bg-indigo-600 transition duration-200 mt-5"
               >
-                Login
+                Sign up
               </button>
             </form>
-            <a href="/signup" className="mt-3 text-slate-100 underline underline-offset-1 hover:text-cyan-400 text-sm sm:text-base">
-              Not a user yet? Register as one
+            <a href="/login" className="mt-3 text-slate-100 underline underline-offset-1 hover:text-cyan-400 text-sm sm:text-base">
+              Already have an account? Login to it
             </a>
           </div>
-        </div>
-
-        {/* Right side - Image */}
-        <div className="hidden laptop:block w-1/2 desktop:w-1/2 h-auto">
-          <img
-            src="/images/linkify-login.png"
-            alt="Login illustration"
-            className="w-full h-full object-cover"
-          />
         </div>
       </div>
     </div>
   );
 };
 
-export default Login;
+export default SignUp;
