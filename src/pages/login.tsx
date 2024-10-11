@@ -19,7 +19,6 @@ const Login: React.FC = () => {
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
-    console.log('Form data:', formData);
 
     try {
       const response = await fetch('/api/login', {
@@ -56,7 +55,7 @@ const Login: React.FC = () => {
             <form onSubmit={handleSubmit}>
               <div className="mb-4">
                 <label htmlFor="email" className="block text-slate-100 font-medium font-bold mb-2">
-                  Username
+                  Email
                 </label>
                 <input
                   type="email"

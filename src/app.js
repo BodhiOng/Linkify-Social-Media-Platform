@@ -1,5 +1,5 @@
 // Load environment variables from .env file
-require('dotenv').config({ path: '../.env'});
+require('dotenv').config();
 
 // Import required modules
 const express = require('express');
@@ -23,9 +23,9 @@ const handle = nextApp.getRequestHandler();
 const app = express();
 
 // Import port and connectionstring from .env
-const port = process.env.PORT || 3000;
+const port = 4000;
 const mongoURI = process.env.MONGODB_URI;
-console.log(mongoURI)
+console.log(mongoURI);
 
 nextApp.prepare().then(() => {
     // Create HTTP server
@@ -98,7 +98,7 @@ nextApp.prepare().then(() => {
 
     // Handle all other routes with Next.js
     app.all('*', (req, res) => {
-        return handle(req, res);
+        handle(req, res);
     });
     
     // Starting the server

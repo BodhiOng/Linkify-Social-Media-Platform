@@ -6,16 +6,14 @@ interface LoginResponse {
     message?: string;
 }
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse<LoginResponse>) {
+export default async function loginHandler(req: NextApiRequest, res: NextApiResponse<LoginResponse>) {
     if (req.method === 'POST') {
         const { email, password } = req.body;
 
         try {
-            const response = await fetch(`http://localhost:${port}/auth/api/login`, {
+            const response = await fetch(`http://localhost:4000/auth/api/login`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, password }),
             });
 
@@ -31,6 +29,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         }
     } else {
         res.setHeader('Allow', ['POST']);
-        return res.status(405).end(`Method ${req.method} Not Allowed`);
+        res.status(405).end(`Method ${req.method} Not Allowed`);
     }
 }
