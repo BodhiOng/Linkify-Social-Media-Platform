@@ -1,4 +1,4 @@
-import React, { useState, ChangeEvent, FormEvent } from 'react';
+import React, { useState, ChangeEvent, FormEvent, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Linkify from '../components/Linkify';
 
@@ -10,6 +10,18 @@ interface FormData {
 const Login: React.FC = () => {
   const router = useRouter();
   const [formData, setFormData] = useState<FormData>({ email: '', password: '' });
+  const [error, setError] = useState<{ show: boolean; message: string }>({ show: false, message: '' });
+
+  useEffect(() => {
+    if (error.show) {
+      const timer = setTimeout(() => {
+        setError({ show: false, message: '' });
+      }, 5000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [error.show]);
+
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>): void => {
     const { name, value } = e.target;
@@ -21,6 +33,7 @@ const Login: React.FC = () => {
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
+    setError({ show: false, message: '' });
 
     try {
       const response = await fetch('/api/login', {
@@ -38,11 +51,11 @@ const Login: React.FC = () => {
         router.push("/feed")
       } else {
         console.log("Login error: ", data.message);
-        alert(data.message);
+        setError({ show: true, message: data.message || "Invalid username or password"});
       }
     } catch (error) {
       console.error("Error occured during login: ", error);
-      alert("An error occured. Please try again.")
+      setError({ show: true, message: "An error occurred. Please try again"})
     }
   };
 
@@ -91,6 +104,12 @@ const Login: React.FC = () => {
                 Login
               </button>
             </form>
+            {error.show && (
+              <div className="mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded relative" role="alert">
+                <strong className="font-bold">Error: </strong>
+                <span className="block sm:inline">{error.message}</span>
+              </div>
+            )}
             <a href="/signup" className="mt-3 text-slate-100 underline underline-offset-1 hover:text-cyan-400 text-sm sm:text-base">
               Not a user yet? Register as one
             </a>
