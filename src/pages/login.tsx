@@ -1,4 +1,5 @@
 import React, { useState, ChangeEvent, FormEvent } from 'react';
+import { useRouter } from 'next/router';
 import Linkify from '../components/Linkify';
 
 interface FormData {
@@ -7,6 +8,7 @@ interface FormData {
 }
 
 const Login: React.FC = () => {
+  const router = useRouter();
   const [formData, setFormData] = useState<FormData>({ email: '', password: '' });
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>): void => {
@@ -33,6 +35,7 @@ const Login: React.FC = () => {
 
       if(response.ok) {
         console.log("Login successful: ", data);
+        router.push("/feed")
       } else {
         console.log("Login error: ", data.message);
         alert(data.message);

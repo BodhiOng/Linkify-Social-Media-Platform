@@ -110,5 +110,3 @@ nextApp.prepare().then(() => {
     // Make io accessible to other modules
     app.set('io', io);
 });
-
-module.exports = { port };

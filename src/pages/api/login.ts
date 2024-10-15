@@ -1,5 +1,4 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { port } from '../../app';
 
 interface LoginResponse {
     success: boolean;
