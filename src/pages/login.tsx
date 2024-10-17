@@ -48,10 +48,10 @@ const Login: React.FC = () => {
 
       if(response.ok) {
         console.log("Login successful: ", data);
-        router.push("/feed")
+        router.push("/feed");
       } else {
         console.log("Login error: ", data.message);
-        setError({ show: true, message: data.message || "Invalid username or password"});
+        setError({ show: true, message: data.message || "Invalid email or password"});
       }
     } catch (error) {
       console.error("Error occured during login: ", error);

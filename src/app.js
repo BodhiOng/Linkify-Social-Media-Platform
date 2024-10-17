@@ -3,12 +3,12 @@ require('dotenv').config();
 
 // Import required modules
 const express = require('express');
-const mongoose = require('mongoose');
 const rateLimitMiddleware = require('./middlewares/rateLimitMiddleware');
 const cookieParser = require('cookie-parser');
 const http = require('http');
 const { Server } = require('socket.io');
 const next = require('next');
+const dbConnect = require('./dbConnect');
 
 // Determine if we're in development or production mode
 const dev = process.env.NODE_ENV !== 'production';
@@ -22,11 +22,6 @@ const handle = nextApp.getRequestHandler();
 // Create Express app
 const app = express();
 
-// Import port and connectionstring from .env
-const port = 4000;
-const mongoURI = process.env.MONGODB_URI;
-console.log(mongoURI);
-
 nextApp.prepare().then(() => {
     // Create HTTP server
     const server = http.createServer(app);
@@ -35,14 +30,7 @@ nextApp.prepare().then(() => {
     const io = new Server(server);
 
     // Connect to MongoDB
-    mongoose.connect(mongoURI, {
-        serverSelectionTimeoutMS: 20000, // 20 seconds timeout
-    })
-        .then(() => console.log('Connected to MongoDB'))
-        .catch(err => {
-            console.error('Failed to connect to MongoDB', err);
-            process.exit(1);
-    });
+    dbConnect();
 
     // Middleware setup
     app.use(express.json());
@@ -102,7 +90,7 @@ nextApp.prepare().then(() => {
     });
     
     // Starting the server
-    server.listen(port, (err) => {
+    server.listen(port = 4000, (err) => {
         if (err) throw err;
         console.log(`Server is running on port ${port}`);
     });

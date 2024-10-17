@@ -1,13 +1,48 @@
-import React, { useState, ChangeEvent, FormEvent } from 'react';
+import React, { useState, ChangeEvent, FormEvent, useEffect } from 'react';
+import { useRouter } from 'next/router';
 import Linkify from '../components/Linkify';
 
 interface FormData {
   username: string;
+  email: string;
   password: string;
 }
 
+interface FieldError {
+  username: string;
+  email: string;
+}
+
 const SignUp: React.FC = () => {
-  const [formData, setFormData] = useState<FormData>({ username: '', password: '' });
+  const router = useRouter();
+  const [formData, setFormData] = useState<FormData>({ username: '', email: '', password: '' });
+  const [error, setError] = useState<{ show: boolean; message: string}>({ show: false, message: '' });
+  const [fieldErrors, setFieldErrors] = useState<FieldError>({ username: '', email: '' });
+
+  useEffect(() => {
+    if(error.show) {
+      const timer = setTimeout(() => {
+        setError({ show: false,  message: '' })
+      }, 5000)
+
+      return () => clearTimeout(timer);
+    }
+  }, [error.show]);
+
+  const checkExistence = async (field: 'username' | 'email', value: string) => {
+    try {
+      const response = await fetch(`/api/check-existence?${field}=${value}`);
+      const data = await response.json();
+
+      if (data.exists) {
+        setFieldErrors(prev => ({ ...prev, [field]: `This ${field} is already taken`}));
+      } else {
+        setFieldErrors(prev => ({ ...prev, [field]: '' }));
+      }
+    } catch (error) {
+      console.error(`Error checking ${field} existence: `, error);
+    }
+  };
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>): void => {
     const { name, value } = e.target;
@@ -15,11 +50,43 @@ const SignUp: React.FC = () => {
       ...prevData,
       [name]: value,
     }));
+
+    if (name === 'username' || name === 'email') {
+      checkExistence(name, value);
+    }
   };
 
-  const handleSubmit = (e: FormEvent<HTMLFormElement>): void => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
-    console.log('Form data:', formData);
+    setError({ show: false, message: '' });
+
+    if (fieldErrors.username || fieldErrors.email) {
+      setError({ show: true, message: "Please correct the errors before submitting"});
+      return;
+    }
+ 
+    try {
+      const response = await fetch('/api/signup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        console.log("Sign up successful: ", data);
+        router.push("/feed");
+      } else {
+        console.error("Sign up error: ", response.status, data);
+        setError({ show: true, message: data.message || "An error occurred during sign up" });
+      }
+    } catch (error) {
+      console.error("Error occurred during sign up: ", error);
+      setError({ show: true, message: "An error occurred. Please try again." });
+    }    
   };
 
   return (
@@ -53,6 +120,22 @@ const SignUp: React.FC = () => {
                   className="w-full px-3 py-2 sm:px-4 sm:py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 mb-2"
                   required
                 />
+                {fieldErrors.username && <p className="text-red-500 text-sm">{fieldErrors.username}</p>}
+              </div>
+              <div className="mb-4">
+                <label htmlFor="email" className="block text-slate-100 font-medium font-bold mb-2">
+                  Email
+                </label>
+                <input
+                  type="email"
+                  name="email"
+                  id="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 sm:px-4 sm:py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 mb-2"
+                  required
+                />
+                {fieldErrors.email && <p className="text-red-500 text-sm">{fieldErrors.email}</p>}
               </div>
               <div className="mb-4">
                 <label htmlFor="password" className="block text-slate-100 font-medium font-bold mb-2">
@@ -75,6 +158,12 @@ const SignUp: React.FC = () => {
                 Sign up
               </button>
             </form>
+            {error.show && (
+              <div className="mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded relative" role="alert">
+                <strong className="font-bold">Error: </strong>
+                <span className="block sm:inline">{error.message}</span>
+              </div>
+            )}
             <a href="/login" className="mt-3 text-slate-100 underline underline-offset-1 hover:text-cyan-400 text-sm sm:text-base">
               Already have an account? Login to it
             </a>
