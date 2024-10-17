@@ -16,7 +16,7 @@ interface FieldError {
 const SignUp: React.FC = () => {
   const router = useRouter();
   const [formData, setFormData] = useState<FormData>({ username: '', email: '', password: '' });
-  const [error, setError] = useState<{ show: boolean; message: string}>({ show: false, message: '' });
+  const [error, setError] = useState<{ show: boolean; message: string }>({ show: false, message: '' });
   const [fieldErrors, setFieldErrors] = useState<FieldError>({ username: '', email: '' });
 
   useEffect(() => {
@@ -61,7 +61,7 @@ const SignUp: React.FC = () => {
     setError({ show: false, message: '' });
 
     if (fieldErrors.username || fieldErrors.email) {
-      setError({ show: true, message: "Please correct the errors before submitting"});
+      setError({ show: true, message: "Please correct the errors before submitting" });
       return;
     }
  
