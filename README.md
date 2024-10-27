@@ -1,5 +1,5 @@
 # Social Media Platform (MERN & Next.js)
-Welcome to the Social Media Platform project! This application allows users to connect, share posts, comment, like, and follow other users.
+The Social Media Platform is a full-featured web application developed using the MERN (MongoDB, Express.js, React, Node.js) stack alongside Next.js. This platform is designed to facilitate social interaction among users, enabling them to create, share, and engage with content in a dynamic online environment.
 
 ## Table of Contents
 
