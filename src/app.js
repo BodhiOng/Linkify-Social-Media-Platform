@@ -9,34 +9,44 @@ const http = require('http');
 const { Server } = require('socket.io');
 const next = require('next');
 const dbConnect = require('./dbConnect');
+const cors = require('cors');
 
-// Determine if we're in development or production mode
 const dev = process.env.NODE_ENV !== 'production';
-
-// Initialize Next.js app
 const nextApp = next({ dev });
-
-// Get Next.js request handler
 const handle = nextApp.getRequestHandler();
-
-// Create Express app
 const app = express();
 
 nextApp.prepare().then(() => {
     // Create HTTP server
     const server = http.createServer(app);
 
-    // Initialize Socket.IO
-    const io = new Server(server);
+    // Configure CORS
+    const io = new Server(server, {
+        cors: {
+            origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+            methods: ['GET', 'POST', 'PUT', 'DELETE'],
+            credentials: true
+        }
+    });
 
     // Connect to MongoDB
     dbConnect();
 
     // Middleware setup
+    app.use(cors({
+        origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+        credentials: true
+    }));
     app.use(express.json());
     app.use(express.urlencoded({ extended: true }));
     app.use(rateLimitMiddleware);
     app.use(cookieParser());
+
+    // Add error handling middleware
+    app.use((err, req, res, next) => {
+        console.error(err.stack);
+        res.status(500).json({ message: 'Something went wrong!' });
+    });
 
     // Socket IO connection handling
     io.on('connection', (socket) => {
@@ -51,50 +61,45 @@ nextApp.prepare().then(() => {
         socket.on('joinPost', (postId) => {
             socket.join(postId);
         });
-        
+
         // Handle disconnection
         socket.on('disconnect', () => {
             console.log("User disconnected");
         });
     });
 
-    // Routes setup
-    const authRoutes = require('./routes/authRoutes');
-    const userRoutes = require('./routes/userRoutes');
-    const postRoutes = require('./routes/postRoutes');
-    const commentRoutes = require('./routes/commentRoutes');
-    const likeRoutes = require('./routes/likeRoutes');
-    const followRoutes = require('./routes/followRoutes');
-    const notificationRoutes = require('./routes/notificationRoutes');
-    const feedRoutes = require('./routes/feedRoutes');
-    const messageRoutes = require('./routes/messagesRoutes');
+
+    // API Routes
+    const apiRouter = express.Router();
     
-    app.use('/', feedRoutes);
-    app.use('/auth', authRoutes);
-    app.use('/users', userRoutes);
-    app.use('/posts', postRoutes);
-    app.use('/comments', commentRoutes);
-    app.use('/likes', likeRoutes);
-    app.use('/follows', followRoutes);
-    app.use('/notifications', notificationRoutes);
-    app.use('/messages', messageRoutes);
-    
+    apiRouter.use('/auth', require('./routes/authRoutes'));
+    apiRouter.use('/users', require('./routes/userRoutes'));
+    apiRouter.use('/posts', require('./routes/postRoutes'));
+    apiRouter.use('/comments', require('./routes/commentRoutes'));
+    apiRouter.use('/likes', require('./routes/likeRoutes'));
+    apiRouter.use('/follows', require('./routes/followRoutes'));
+    apiRouter.use('/notifications', require('./routes/notificationRoutes'));
+    apiRouter.use('/messages', require('./routes/messagesRoutes'));
+    apiRouter.use('/feed', require('./routes/feedRoutes'));
+
+    // Mount API routes under /api
+    app.use('/api', apiRouter);
+
     // Test route
-    app.get('/test', (req, res) => {
-        res.json({ message: "Test route is working" });
+    app.get('/api/test', (req, res) => {
+        res.json({ message: "API is working" });
     });
 
     // Handle all other routes with Next.js
     app.all('*', (req, res) => {
-        handle(req, res);
+        return handle(req, res);
     });
-    
-    // Starting the server
-    server.listen(port = 4000, (err) => {
+
+    const PORT = process.env.PORT || 4000;
+    server.listen(PORT, (err) => {
         if (err) throw err;
-        console.log(`Server is running on port ${port}`);
+        console.log(`> Server running on http://localhost:${PORT}`);
     });
-    
-    // Make io accessible to other modules
+
     app.set('io', io);
 });

@@ -1,14 +1,18 @@
 const mongoose = require('mongoose');
-const mongoURI = process.env.MONGODB_URI;
+require('dotenv').config();
 
-// Connect to MongoDB
-const dbConnect = () => mongoose.connect(mongoURI, {
-    serverSelectionTimeoutMS: 20000, // 20 seconds timeout
-})
-    .then(() => console.log('Connected to MongoDB'))
-    .catch(err => {
-        console.error('Failed to connect to MongoDB', err);
-        process.exit(1);
-});
+const dbConnect = async () => {
+  try {
+    if (!process.env.MONGODB_URI) {
+      throw new Error('MONGODB_URI is not defined in environment variables');
+    }
+    
+    await mongoose.connect(process.env.MONGODB_URI);
+    console.log('> Successfully connected to MongoDB.');
+  } catch (error) {
+    console.error('MongoDB connection error:', error);
+    process.exit(1);
+  }
+};
 
 module.exports = dbConnect;
