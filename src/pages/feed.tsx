@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useInView } from 'react-intersection-observer';
 import Header from "../components/Header";
 import dynamic from 'next/dynamic';
@@ -95,45 +95,36 @@ const Feed = () => {
         }
     };
 
-    const handleLike = async (postId: string): Promise<void> => {
+    const handleLike = useCallback(async (postId: string) => {
         try {
-            const response = await fetch(`/api/posts/${postId}/like`, {
+            const response = await fetch(`http://localhost:4000/api/posts/${postId}/like`, {
                 method: 'POST',
             });
             if (!response.ok) throw new Error('Failed to like post');
-
-            // Update posts state optimistically
-            setPosts(prev => prev.map(post =>
-                post._id === postId
-                    ? { ...post, likes_count: post.likes_count + 1 }  // Now this will work
-                    : post
-            ));
         } catch (error) {
-            console.error("Error liking post:", error);
+            console.error('Like error:', error);
         }
-    };
+    }, []);
 
-    const handleFollow = async (userId: string): Promise<void> => {
+    const handleFollow = useCallback(async (userId: string) => {
         try {
-            const response = await fetch(`/api/users/${userId}/follow`, {
+            const response = await fetch(`http://localhost:4000/api/users/${userId}/follow`, {
                 method: 'POST',
             });
             if (!response.ok) throw new Error('Failed to follow user');
-
-            // Update UI accordingly
         } catch (error) {
-            console.error("Error following user:", error);
+            console.error('Follow error:', error);
         }
-    };
+    }, []);
 
-    const handleComment = async (postId: string): Promise<void> => {
+    const handleComment = useCallback(async (postId: string) => {
         try {
-            // Implement comment functionality
-            // Could open a comment modal or navigate to comment section
+            // Implement comment logic
+            console.log('Comment clicked for post:', postId);
         } catch (error) {
-            console.error("Error commenting on post:", error);
+            console.error('Comment error:', error);
         }
-    };
+    }, []);
 
     if (!isClient) {
         return (

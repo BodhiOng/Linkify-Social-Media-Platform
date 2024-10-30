@@ -6,7 +6,7 @@ const verifyToken = require('../middlewares/authMiddleware');
 const router = express.Router();
 
 // Register a new user
-router.post('/api/signup',
+router.post('/signup',
     body('username').notEmpty().withMessage('Username is required'),
     body('email').isEmail().withMessage('Please provide a valid email'),
     body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters long'),
@@ -14,7 +14,7 @@ router.post('/api/signup',
 );
 
 // User login
-router.post('/api/login',
+router.post('/login',
     body('email').isEmail().withMessage('Please provide a valid email'),
     body('password').exists().withMessage('Password is required'),
     authController.loginUser

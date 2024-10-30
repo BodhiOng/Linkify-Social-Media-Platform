@@ -4,7 +4,7 @@ const likeController = require('../controllers/likesController');
 const verifyToken = require('../middlewares/authMiddleware');
 
 // Create a new like
-router.post('/post/:postId', verifyToken, likeController.createLike);
+router.post('/post/:postId', likeController.createLike);
 
 // Get all likes for a specific post
 router.get('/post/:postId', likeController.getLikesByPost);

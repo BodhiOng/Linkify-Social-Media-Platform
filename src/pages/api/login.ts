@@ -10,7 +10,7 @@ export default async function loginHandler(req: NextApiRequest, res: NextApiResp
         const { email, password } = req.body;
 
         try {
-            const response = await fetch("http://localhost:4000/auth/api/login", {
+            const response = await fetch("http://localhost:4000/api/auth/login", {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, password }),
