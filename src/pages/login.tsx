@@ -1,5 +1,6 @@
 import React, { useState, ChangeEvent, FormEvent, useEffect } from 'react';
 import { useRouter } from 'next/router';
+import { useAuth } from '../contexts/AuthContext';
 import Linkify from '../components/Linkify';
 
 interface FormData {
@@ -11,6 +12,7 @@ const Login: React.FC = () => {
   const router = useRouter();
   const [formData, setFormData] = useState<FormData>({ email: '', password: '' });
   const [error, setError] = useState<{ show: boolean; message: string }>({ show: false, message: '' });
+  const { login } = useAuth();
 
   useEffect(() => {
     if (error.show) {
@@ -47,7 +49,7 @@ const Login: React.FC = () => {
       const data = await response.json();
 
       if(response.ok) {
-        console.log("Login successful: ", data);
+        login(data.user, data.token)
         router.push("/feed");
       } else {
         console.log("Login error: ", data.message);
