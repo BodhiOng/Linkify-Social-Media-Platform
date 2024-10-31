@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
 interface User {
     _id: string;
@@ -7,11 +7,12 @@ interface User {
 }
 
 interface AuthContextType {
-    user: User | null;
+    user: any | null;
     token: string | null;
-    login: (userData: User, token: string) => void;
+    login: (userData: any, token: string) => void;
     logout: () => void;
     isAuthenticated: boolean;
+    isLoading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -20,46 +21,85 @@ const AuthContext = createContext<AuthContextType>({
     login: () => { },
     logout: () => { },
     isAuthenticated: false,
+    isLoading: true
 });
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const useAuth = () => useContext(AuthContext);
+
+interface AuthProviderProps {
+    children: ReactNode;
+}
+
+export const AuthProvider = ({ children }: AuthProviderProps) => {
     const [user, setUser] = useState<User | null>(null);
     const [token, setToken] = useState<string | null>(null);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
+
 
     useEffect(() => {
-        // Check localStorage on initial load
-        const storedToken = localStorage.getItem('token');
-        const storedUser = localStorage.getItem('user');
+        const initializeAuth = () => {
+            try {
+                const storedUser = localStorage.getItem('user');
+                const storedToken = localStorage.getItem('token');
 
-        if (storedToken && storedUser) {
-            setToken(storedToken);
-            setUser(JSON.parse(storedUser));
-            setIsAuthenticated(true);
+                console.log('Initializing Auth:', { storedUser, storedToken });
+
+                if (storedToken && storedUser) {
+                    const parsedUser = JSON.parse(storedUser);
+                    setUser(parsedUser);
+                    setToken(storedToken);
+                    setIsAuthenticated(true);
+                } else {
+                    // If no token or user, ensure we're logged out
+                    setUser(null);
+                    setToken(null);
+                    setIsAuthenticated(false);
+                }
+            } catch (error) {
+                console.error('Auth initialization error:', error);
+                // On error, ensure we're logged out
+                setUser(null);
+                setToken(null);
+                setIsAuthenticated(false);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        if (typeof window !== 'undefined') {
+            initializeAuth();
         }
     }, []);
 
-    const login = (userData: User, newToken: string) => {
-        setUser(userData);
-        setToken(newToken);
-        setIsAuthenticated(true);
-        localStorage.setItem('token', newToken);
-        localStorage.setItem('user', JSON.stringify(userData));
+    const login = (userData: any, userToken: string) => {
+        try {
+            localStorage.setItem('user', JSON.stringify(userData));
+            localStorage.setItem('token', userToken);
+            setUser(userData);
+            setToken(userToken);
+            setIsAuthenticated(true);
+        } catch (error) {
+            console.error('Error during login:', error);
+            throw error;
+        }
     };
 
     const logout = () => {
-        setUser(null);
-        setToken(null);
-        setIsAuthenticated(false);
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
+        try {
+            localStorage.removeItem('user');
+            localStorage.removeItem('token');
+            setUser(null);
+            setToken(null);
+            setIsAuthenticated(false);
+        } catch (error) {
+            console.error('Error during logout:', error);
+        }
     };
 
     return (
-        <AuthContext.Provider value={{ user, token, login, logout, isAuthenticated }}>
+        <AuthContext.Provider value={{ user, token, login, logout, isAuthenticated, isLoading }}>
             {children}
         </AuthContext.Provider>
     );
 };
-
-export const useAuth = () => useContext(AuthContext);

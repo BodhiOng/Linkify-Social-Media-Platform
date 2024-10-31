@@ -38,23 +38,25 @@ const Feed = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [hasMore, setHasMore] = useState(true);
-    const [isClient, setIsClient] = useState(false);
     const router = useRouter();
     const { ref, inView } = useInView();
-    const { user, token, isAuthenticated } = useAuth();
+    const { user, token, isAuthenticated, isLoading: authLoading } = useAuth();
 
-    // Set isClient to true once component mounts
+    // Single authentication check
     useEffect(() => {
-        setIsClient(true);
-    }, []);
+        const checkAuth = async () => {
+            if (!authLoading && (!isAuthenticated || !token)) {
+                console.log('Redirecting to login - Not authenticated');
+                router.push('/login');
+            }
+        };
 
-    useEffect(() => {
-        if (!isAuthenticated) {
-            router.push('/login');
-        }
-    }, [isAuthenticated, router]);
+        checkAuth();
+    }, [isAuthenticated, token, authLoading, router]);
 
-    const fetchPosts = async (pageNum: number) => {
+    const fetchPosts = useCallback(async (pageNum: number) => {
+        if (!token) return; // Don't fetch if no token
+
         try {
             setIsLoading(true);
             const response = await fetch(`http://localhost:4000/api/feed?page=${pageNum}`, {
@@ -66,6 +68,11 @@ const Feed = () => {
             });
 
             if (!response.ok) {
+                if (response.status === 401) {
+                    // Token expired or invalid
+                    router.push('/login');
+                    return;
+                }
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
 
@@ -84,27 +91,23 @@ const Feed = () => {
         } finally {
             setIsLoading(false);
         }
-    };
-
+    }, [token, router]);    
+    
+    // Initial fetch
     useEffect(() => {
-        if (isClient) {
+        if (isAuthenticated && token) {
             fetchPosts(1);
         }
-    }, [isClient]);
+    }, [isAuthenticated, token, fetchPosts]);
 
+    // Infinite scroll
     useEffect(() => {
-        if (inView && hasMore && !isLoading && isClient) {
-            fetchMorePosts();
-        }
-    }, [inView, isClient]);
-
-    const fetchMorePosts = async () => {
-        if (!isLoading && hasMore) {
+        if (inView && hasMore && !isLoading && isAuthenticated) {
             const nextPage = page + 1;
-            await fetchPosts(nextPage);
+            fetchPosts(nextPage);
             setPage(nextPage);
         }
-    };
+    }, [inView, hasMore, isLoading, isAuthenticated, fetchPosts, page]);
 
     const handleLike = useCallback(async (postId: string) => {
         try {
@@ -137,22 +140,16 @@ const Feed = () => {
         }
     }, []);
 
-    if (!isClient) {
+    if (authLoading) {
         return (
-            <div className="bg-slate-900 min-h-screen">
-                <Header />
-                <div className="max-w-2xl mx-auto pt-16 px-4">
-                    <div className="space-y-4">
-                        {[1, 2, 3].map((i) => (
-                            <div key={i} className="bg-slate-800 rounded-lg p-4 shadow animate-pulse">
-                                <div className="h-4 bg-slate-700 rounded w-3/4 mb-4"></div>
-                                <div className="h-4 bg-slate-700 rounded w-1/2"></div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
+            <div className="bg-slate-900 min-h-screen flex items-center justify-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
             </div>
         );
+    }
+
+    if (!isAuthenticated || !token) {
+        return null;
     }
 
     return (

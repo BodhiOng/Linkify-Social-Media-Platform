@@ -8,11 +8,25 @@ interface FormData {
   password: string;
 }
 
+interface LoginResponse {
+  message: string;
+  accessToken: string;
+}
+
 const Login: React.FC = () => {
   const router = useRouter();
   const [formData, setFormData] = useState<FormData>({ email: '', password: '' });
   const [error, setError] = useState<{ show: boolean; message: string }>({ show: false, message: '' });
+  const [isLoading, setIsLoading] = useState(false);
   const { login } = useAuth();
+
+  useEffect(() => {
+    // Debug: Check initial localStorage state
+    console.log('Initial localStorage state:', {
+      user: localStorage.getItem('user'),
+      token: localStorage.getItem('token')
+    });
+  }, []);
 
   useEffect(() => {
     if (error.show) {
@@ -29,39 +43,74 @@ const Login: React.FC = () => {
     const { name, value } = e.target;
     setFormData((prevData) => ({
       ...prevData,
-      [name]: value.trim(),
+      [name]: value,
     }));
   };
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
+    setIsLoading(true);
     setError({ show: false, message: '' });
 
+    const submitData = {
+      email: formData.email.trim(),
+      password: formData.password.trim()
+    };
+
     try {
-      const response = await fetch('/api/login', {
+      const response = await fetch('http://localhost:4000/api/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(submitData),
+        credentials: 'include'
       });
 
-      const data = await response.json();
+      const data: LoginResponse = await response.json();
+      console.log('Login response:', data);
 
-      if(response.ok) {
-        login(data.user, data.token)
-        router.push("/feed");
+      if (response.ok) {
+        try {
+          // Create user object from email
+          const user = {
+            email: submitData.email,
+            // Add any other user data you want to store
+          };
+
+          // Store in localStorage
+          localStorage.setItem('user', JSON.stringify(user));
+          localStorage.setItem('token', data.accessToken);
+
+          // Verify storage
+          console.log('Stored in localStorage:', {
+            user: localStorage.getItem('user'),
+            token: localStorage.getItem('token')
+          });
+
+          // Update auth context with the token
+          login(user, data.accessToken);
+          
+          // Navigate to feed
+          router.push("/feed");
+        } catch (storageError) {
+          console.error('Storage error:', storageError);
+          throw new Error('Failed to store authentication data');
+        }
       } else {
-        console.log("Login error: ", data.message);
-        setError({ show: true, message: data.message || "Invalid email or password"});
+        throw new Error(data.message || 'Login failed');
       }
     } catch (error) {
-      console.error("Error occured during login: ", error);
-      setError({ show: true, message: "An error occurred. Please try again"})
+      console.error("Login error:", error);
+      setError({ 
+        show: true, 
+        message: error instanceof Error ? error.message : "An unexpected error occurred" 
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  
   return (
     <div className="flex items-center justify-center h-screen bg-slate-900 px-4 sm:px-6 lg:px-8">
       <div className="flex flex-col md:flex-row w-full h-auto md:h-5/6 bg-transparent rounded-lg shadow-lg overflow-hidden desktop:max-w-7xl laptop:max-w-5xl tablet:shadow-none mobile:shadow-none">
@@ -83,6 +132,7 @@ const Login: React.FC = () => {
                   onChange={handleChange}
                   className="w-full px-3 py-2 sm:px-4 sm:py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 mb-2"
                   required
+                  disabled={isLoading}
                 />
               </div>
               <div className="mb-4">
@@ -97,13 +147,15 @@ const Login: React.FC = () => {
                   onChange={handleChange}
                   className="w-full px-3 py-2 sm:px-4 sm:py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   required
+                  disabled={isLoading}
                 />
               </div>
               <button
                 type="submit"
-                className="w-full bg-indigo-500 text-white text-lg py-3 sm:py-4 rounded-md hover:bg-indigo-600 transition duration-200 mt-5"
+                className={`w-full bg-indigo-500 text-white text-lg py-3 sm:py-4 rounded-md hover:bg-indigo-600 transition duration-200 mt-5 ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                disabled={isLoading}
               >
-                Login
+                {isLoading ? 'Logging in...' : 'Login'}
               </button>
             </form>
             {error.show && (
