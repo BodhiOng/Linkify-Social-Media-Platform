@@ -1,6 +1,7 @@
 import React, { useState, ChangeEvent, FormEvent, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Linkify from '../components/Linkify';
+import { useAuth } from '../contexts/AuthContext';
 
 interface FormData {
   username: string;
@@ -15,14 +16,16 @@ interface FieldError {
 
 const SignUp: React.FC = () => {
   const router = useRouter();
+  const { login } = useAuth();
   const [formData, setFormData] = useState<FormData>({ username: '', email: '', password: '' });
   const [error, setError] = useState<{ show: boolean; message: string }>({ show: false, message: '' });
   const [fieldErrors, setFieldErrors] = useState<FieldError>({ username: '', email: '' });
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    if(error.show) {
+    if (error.show) {
       const timer = setTimeout(() => {
-        setError({ show: false,  message: '' })
+        setError({ show: false, message: '' })
       }, 5000)
 
       return () => clearTimeout(timer);
@@ -35,7 +38,7 @@ const SignUp: React.FC = () => {
       const data = await response.json();
 
       if (data.exists) {
-        setFieldErrors(prev => ({ ...prev, [field]: `This ${field} is already taken`}));
+        setFieldErrors(prev => ({ ...prev, [field]: `This ${field} is already taken` }));
       } else {
         setFieldErrors(prev => ({ ...prev, [field]: '' }));
       }
@@ -56,28 +59,49 @@ const SignUp: React.FC = () => {
     }
   };
 
+
   const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
     setError({ show: false, message: '' });
+    setIsLoading(true);
 
     if (fieldErrors.username || fieldErrors.email) {
       setError({ show: true, message: "Please correct the errors before submitting" });
+      setIsLoading(false);
       return;
     }
- 
+
     try {
-      const response = await fetch('/api/signup', {
+      const response = await fetch('http://localhost:4000/api/auth/signup', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(formData),
+        credentials: 'include'
       });
 
       const data = await response.json();
 
       if (response.ok) {
         console.log("Sign up successful: ", data);
+
+        // Create user object
+        const user = {
+          email: formData.email,
+          username: formData.username
+        };
+
+        // Store auth data and update context
+        login(user, data.accessToken);
+
+        // Log the stored data
+        console.log('Stored in localStorage:', {
+          user: localStorage.getItem('user'),
+          token: localStorage.getItem('token')
+        });
+
+        // Redirect to feed
         router.push("/feed");
       } else {
         console.error("Sign up error: ", response.status, data);
@@ -86,7 +110,9 @@ const SignUp: React.FC = () => {
     } catch (error) {
       console.error("Error occurred during sign up: ", error);
       setError({ show: true, message: "An error occurred. Please try again." });
-    }    
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -153,9 +179,18 @@ const SignUp: React.FC = () => {
               </div>
               <button
                 type="submit"
-                className="w-full bg-indigo-500 text-white text-lg py-3 sm:py-4 rounded-md hover:bg-indigo-600 transition duration-200 mt-5"
+                disabled={isLoading}
+                className={`w-full ${isLoading ? 'bg-indigo-400' : 'bg-indigo-500 hover:bg-indigo-600'} 
+                text-white text-lg py-3 sm:py-4 rounded-md transition duration-200 mt-5 flex items-center justify-center`}
               >
-                Sign up
+                {isLoading ? (
+                  <>
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                    Signing up...
+                  </>
+                ) : (
+                  'Sign up'
+                )}
               </button>
             </form>
             {error.show && (
