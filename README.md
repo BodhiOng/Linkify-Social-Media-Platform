@@ -31,8 +31,8 @@ Linkify is a full-featured web application developed using the MERN stack alongs
 1. **Clone the repository**:
 
    ```bash
-   git clone https://github.com/BodhiOng/Social-Media-Platform-MERN-NextJS.git
-   cd Social-Media-Platform-MERN-NextJS
+   git clone https://github.com/BodhiOng/Linkify-Social-Media-Platform.git
+   cd Linkify-Social-Media-Platform
    ```
 
 2. **Install dependencies**
