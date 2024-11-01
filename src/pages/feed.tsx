@@ -118,8 +118,14 @@ const Feed = () => {
         try {
             const response = await fetch(`${API_URL}/posts/${postId}/like`, {
                 method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
             });
             if (!response.ok) throw new Error('Failed to like post');
+
+            return response.json();
         } catch (error) {
             console.error('Like error:', error);
         }

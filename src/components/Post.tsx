@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 
 interface IPost {
     _id: string;
@@ -19,20 +19,33 @@ interface PostProps {
 }
 
 const Post: React.FC<PostProps> = ({ post, onLike, onFollow, onComment }) => {
-    const [isLiked, setIsLiked] = useState(false);
+    const [isLiked, setIsLiked] = useState(post.is_liked || false);
     const [likesCount, setLikesCount] = useState(post.likes_count);
     const [isLoading, setIsLoading] = useState(false);
 
+    // Update states when post prop changes
+    useEffect(() => {
+        setIsLiked(post.is_liked || false);
+        setLikesCount(post.likes_count);
+    }, [post]);
+    
     const handleLike = useCallback(async () => {
         if (isLoading) return;
         
         try {
             setIsLoading(true);
-            await onLike();
+            
+            // Optimistic update
             setIsLiked(prev => !prev);
             setLikesCount(prev => isLiked ? prev - 1 : prev + 1);
+            
+            // Make API call
+            await onLike();
         } catch (error) {
+            // Revert changes if API call fails
             console.error('Error handling like:', error);
+            setIsLiked(prev => !prev);
+            setLikesCount(prev => isLiked ? prev + 1 : prev - 1);
         } finally {
             setIsLoading(false);
         }
@@ -81,6 +94,7 @@ const Post: React.FC<PostProps> = ({ post, onLike, onFollow, onComment }) => {
                             : 'bg-gray-700/50 text-gray-300 hover:bg-gray-700 hover:text-white'
                         }`}
                     onClick={handleLike}
+                    disabled={isLoading}
                 >
                     <span className="text-lg">{isLiked ? '❤️' : '🤍'}</span>
                     <span className="font-medium">Like</span>
