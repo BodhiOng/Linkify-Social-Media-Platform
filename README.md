@@ -14,7 +14,6 @@ Linkify is a full-featured web application developed using the MERN stack alongs
 - **Backend**: Node.js, Express.js
 - **Database**: MongoDB
 - **Authentication**: JSON Web Tokens (JWT)
-- **State Management**: Redux
 - **Styling**: Tailwind CSS
 
 ## Features
