@@ -1,4 +1,4 @@
-# Social Media Platform (MERN & Next.js)
+# Linkify: social media platform
 Linkify is a full-featured web application developed using the MERN stack alongside Next.js. This platform is designed to facilitate social interaction among users, enabling them to create, share, and engage with content in a dynamic online environment.
 
 ## Table of Contents
