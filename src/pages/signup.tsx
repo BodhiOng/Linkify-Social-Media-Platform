@@ -14,6 +14,11 @@ interface FieldError {
   email: string;
 }
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+if (!API_URL) {
+  throw new Error('NEXT_PUBLIC_API_URL is not defined in environment variables');
+}
+
 const SignUp: React.FC = () => {
   const router = useRouter();
   const { login } = useAuth();
@@ -72,7 +77,7 @@ const SignUp: React.FC = () => {
     }
 
     try {
-      const response = await fetch('http://localhost:4000/api/auth/signup', {
+      const response = await fetch(`${API_URL}/auth/signup`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

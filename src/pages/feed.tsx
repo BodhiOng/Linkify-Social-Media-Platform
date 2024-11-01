@@ -22,6 +22,11 @@ interface FeedResponse {
     hasMore: boolean;
 }
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+if (!API_URL) {
+    throw new Error('NEXT_PUBLIC_API_URL is not defined in environment variables');
+}
+
 const Post = dynamic(() => import('../components/Post'), {
     ssr: false,
     loading: () => (
@@ -59,7 +64,7 @@ const Feed = () => {
 
         try {
             setIsLoading(true);
-            const response = await fetch(`http://localhost:4000/api/feed?page=${pageNum}`, {
+            const response = await fetch(`${API_URL}/feed?page=${pageNum}`, {
                 credentials: 'include',
                 headers: {
                     'Content-Type': 'application/json',
@@ -91,8 +96,8 @@ const Feed = () => {
         } finally {
             setIsLoading(false);
         }
-    }, [token, router]);    
-    
+    }, [token, router]);
+
     // Initial fetch
     useEffect(() => {
         if (isAuthenticated && token) {
@@ -111,7 +116,7 @@ const Feed = () => {
 
     const handleLike = useCallback(async (postId: string) => {
         try {
-            const response = await fetch(`http://localhost:4000/api/posts/${postId}/like`, {
+            const response = await fetch(`${API_URL}/posts/${postId}/like`, {
                 method: 'POST',
             });
             if (!response.ok) throw new Error('Failed to like post');
@@ -122,7 +127,7 @@ const Feed = () => {
 
     const handleFollow = useCallback(async (userId: string) => {
         try {
-            const response = await fetch(`http://localhost:4000/api/users/${userId}/follow`, {
+            const response = await fetch(`${API_URL}/users/${userId}/follow`, {
                 method: 'POST',
             });
             if (!response.ok) throw new Error('Failed to follow user');

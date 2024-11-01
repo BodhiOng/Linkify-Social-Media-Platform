@@ -13,6 +13,11 @@ interface LoginResponse {
   accessToken: string;
 }
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+if (!API_URL) {
+  throw new Error('NEXT_PUBLIC_API_URL is not defined in environment variables');
+}
+
 const Login: React.FC = () => {
   const router = useRouter();
   const [formData, setFormData] = useState<FormData>({ email: '', password: '' });
@@ -58,7 +63,7 @@ const Login: React.FC = () => {
     };
 
     try {
-      const response = await fetch('http://localhost:4000/api/auth/login', {
+      const response = await fetch(`${API_URL}/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
