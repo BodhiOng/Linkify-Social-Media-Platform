@@ -23,15 +23,14 @@ const Login: React.FC = () => {
   const [formData, setFormData] = useState<FormData>({ email: '', password: '' });
   const [error, setError] = useState<{ show: boolean; message: string }>({ show: false, message: '' });
   const [isLoading, setIsLoading] = useState(false);
-  const { login } = useAuth();
+  const { login, isAuthenticated } = useAuth(); // Add isAuthenticated check
 
+  // Redirect if already authenticated
   useEffect(() => {
-    // Debug: Check initial localStorage state
-    console.log('Initial localStorage state:', {
-      user: localStorage.getItem('user'),
-      token: localStorage.getItem('token')
-    });
-  }, []);
+    if (isAuthenticated) {
+      router.replace('/feed');
+    }
+  }, [isAuthenticated, router]);
 
   useEffect(() => {
     if (error.show) {
@@ -58,7 +57,7 @@ const Login: React.FC = () => {
     setError({ show: false, message: '' });
 
     const submitData = {
-      email: formData.email.trim(),
+      email: formData.email.trim().toLowerCase(),
       password: formData.password.trim()
     };
 
@@ -73,43 +72,37 @@ const Login: React.FC = () => {
       });
 
       const data: LoginResponse = await response.json();
-      console.log('Login response:', data);
 
-      if (response.ok) {
-        try {
-          // Create user object from email
-          const user = {
-            email: submitData.email,
-            // Add any other user data you want to store
-          };
+      if (!response.ok) {
+        throw new Error(data.message || 'Invalid credentials');
+      }
 
-          // Store in localStorage
-          localStorage.setItem('user', JSON.stringify(user));
-          localStorage.setItem('token', data.accessToken);
+      // Create user object
+      const user = {
+        email: submitData.email,
+      };
 
-          // Verify storage
-          console.log('Stored in localStorage:', {
-            user: localStorage.getItem('user'),
-            token: localStorage.getItem('token')
-          });
+      try {
+        // Update auth context first
+        await login(user, data.accessToken);
 
-          // Update auth context with the token
-          login(user, data.accessToken);
-          
-          // Navigate to feed
-          router.push("/feed");
-        } catch (storageError) {
-          console.error('Storage error:', storageError);
-          throw new Error('Failed to store authentication data');
-        }
-      } else {
-        throw new Error(data.message || 'Login failed');
+        // Then store in localStorage
+        localStorage.setItem('user', JSON.stringify(user));
+        localStorage.setItem('token', data.accessToken);
+
+        // Navigate to feed
+        router.replace("/feed");
+      } catch (storageError) {
+        console.error('Storage/Auth error:', storageError);
+        throw new Error('Authentication failed');
       }
     } catch (error) {
       console.error("Login error:", error);
-      setError({ 
-        show: true, 
-        message: error instanceof Error ? error.message : "An unexpected error occurred" 
+      setError({
+        show: true,
+        message: error instanceof Error
+          ? error.message
+          : "Login failed. Please try again."
       });
     } finally {
       setIsLoading(false);
@@ -155,20 +148,27 @@ const Login: React.FC = () => {
                   disabled={isLoading}
                 />
               </div>
+              {error.show && (
+                <div className="mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded relative" role="alert">
+                  <strong className="font-bold">Error: </strong>
+                  <span className="block sm:inline">{error.message}</span>
+                </div>
+              )}
               <button
                 type="submit"
-                className={`w-full bg-indigo-500 text-white text-lg py-3 sm:py-4 rounded-md hover:bg-indigo-600 transition duration-200 mt-5 ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                className={`w-full bg-indigo-500 text-white text-lg py-3 sm:py-4 rounded-md hover:bg-indigo-600 transition duration-200 mt-5 
+                          ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
                 disabled={isLoading}
               >
-                {isLoading ? 'Logging in...' : 'Login'}
+                {isLoading ? (
+                  <div className="flex items-center justify-center">
+                    <div className="animate-spin h-5 w-5 mr-3 border-2 border-white border-t-transparent rounded-full"></div>
+                    Logging in...
+                  </div>
+                ) : 'Login'}
               </button>
             </form>
-            {error.show && (
-              <div className="mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded relative" role="alert">
-                <strong className="font-bold">Error: </strong>
-                <span className="block sm:inline">{error.message}</span>
-              </div>
-            )}
+
             <a href="/signup" className="mt-3 text-slate-100 underline underline-offset-1 hover:text-cyan-400 text-sm sm:text-base">
               Not a user yet? Register as one
             </a>

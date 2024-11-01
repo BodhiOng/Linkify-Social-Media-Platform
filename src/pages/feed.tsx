@@ -1,9 +1,9 @@
 import { useEffect, useState, useCallback } from "react";
 import { useInView } from 'react-intersection-observer';
 import { useRouter } from "next/router";
+import dynamic from 'next/dynamic';
 import Header from "../components/Header";
 import { useAuth } from "../contexts/AuthContext";
-import dynamic from 'next/dynamic';
 
 interface IPost {
     _id: string;
@@ -38,25 +38,23 @@ const Post = dynamic(() => import('../components/Post'), {
 });
 
 const Feed = () => {
+    const router = useRouter();
     const [posts, setPosts] = useState<IPost[]>([]);
     const [page, setPage] = useState(1);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [hasMore, setHasMore] = useState(true);
-    const router = useRouter();
     const { ref, inView } = useInView();
     const { user, token, isAuthenticated, isLoading: authLoading } = useAuth();
 
     // Single authentication check
     useEffect(() => {
-        const checkAuth = async () => {
-            if (!authLoading && (!isAuthenticated || !token)) {
-                console.log('Redirecting to login - Not authenticated');
-                router.push('/login');
+        if (!authLoading) {  // Only check after auth state is determined
+            const storedToken = localStorage.getItem('token');
+            if (!storedToken || !isAuthenticated || !token) {
+                router.replace('/login');
             }
-        };
-
-        checkAuth();
+        }
     }, [isAuthenticated, token, authLoading, router]);
 
     const fetchPosts = useCallback(async (pageNum: number) => {
@@ -159,9 +157,11 @@ const Feed = () => {
         );
     }
 
+    // Early return if not authenticated
     if (!isAuthenticated || !token) {
         return null;
     }
+
 
     return (
         <div className="bg-slate-900 min-h-screen">
