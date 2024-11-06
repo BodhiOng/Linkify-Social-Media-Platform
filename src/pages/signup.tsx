@@ -14,9 +14,10 @@ interface FieldError {
   email: string;
 }
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
-if (!API_URL) {
-  throw new Error('NEXT_PUBLIC_API_URL is not defined in environment variables');
+interface SignUpResponse {
+  success: boolean;
+  message?: string;
+  accessToken?: string;
 }
 
 const SignUp: React.FC = () => {
@@ -64,7 +65,6 @@ const SignUp: React.FC = () => {
     }
   };
 
-
   const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
     setError({ show: false, message: '' });
@@ -77,20 +77,17 @@ const SignUp: React.FC = () => {
     }
 
     try {
-      const response = await fetch(`${API_URL}/auth/signup`, {
+      const response = await fetch('/api/signup', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
-        credentials: 'include'
+        body: JSON.stringify(formData)
       });
 
-      const data = await response.json();
+      const data: SignUpResponse = await response.json();
 
-      if (response.ok) {
-        console.log("Sign up successful: ", data);
-
+      if (data.success && data.accessToken) {
         // Create user object
         const user = {
           email: formData.email,
@@ -98,18 +95,12 @@ const SignUp: React.FC = () => {
         };
 
         // Store auth data and update context
-        login(user, data.accessToken);
-
-        // Log the stored data
-        console.log('Stored in localStorage:', {
-          user: localStorage.getItem('user'),
-          token: localStorage.getItem('token')
-        });
+        await login(user, data.accessToken);
 
         // Redirect to feed
         router.push("/feed");
       } else {
-        console.error("Sign up error: ", response.status, data);
+        console.error("Sign up error: ", data);
         setError({ show: true, message: data.message || "An error occurred during sign up" });
       }
     } catch (error) {

@@ -9,13 +9,9 @@ interface FormData {
 }
 
 interface LoginResponse {
-  message: string;
-  accessToken: string;
-}
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
-if (!API_URL) {
-  throw new Error('NEXT_PUBLIC_API_URL is not defined in environment variables');
+  success: boolean;
+  message?: string;
+  accessToken?: string;
 }
 
 const Login: React.FC = () => {
@@ -23,9 +19,8 @@ const Login: React.FC = () => {
   const [formData, setFormData] = useState<FormData>({ email: '', password: '' });
   const [error, setError] = useState<{ show: boolean; message: string }>({ show: false, message: '' });
   const [isLoading, setIsLoading] = useState(false);
-  const { login, isAuthenticated } = useAuth(); // Add isAuthenticated check
+  const { login, isAuthenticated } = useAuth();
 
-  // Redirect if already authenticated
   useEffect(() => {
     if (isAuthenticated) {
       router.replace('/feed');
@@ -62,19 +57,22 @@ const Login: React.FC = () => {
     };
 
     try {
-      const response = await fetch(`${API_URL}/auth/login`, {
+      const response = await fetch('/api/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(submitData),
-        credentials: 'include'
+        body: JSON.stringify(submitData)
       });
 
       const data: LoginResponse = await response.json();
 
-      if (!response.ok) {
+      if (!response.ok || !data.success) {
         throw new Error(data.message || 'Invalid credentials');
+      }
+
+      if (!data.accessToken) {
+        throw new Error('No access token received');
       }
 
       // Create user object

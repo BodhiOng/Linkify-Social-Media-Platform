@@ -2,6 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useRouter } from 'next/router';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+if (!API_URL) {
+    throw new Error('NEXT_PUBLIC_API_URL is not defined in environment variables');
+}
+
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [username, setUsername] = useState('User');
@@ -37,7 +42,7 @@ const Header = () => {
   const handleLogout = async () => {
     try {
       // Call the API to logout
-      const response = await fetch('http://localhost:4000/api/auth/logout', {
+      const response = await fetch(`${API_URL}/auth/logout`, {
         method: 'POST',
         credentials: 'include',
         headers: {

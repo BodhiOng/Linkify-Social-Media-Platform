@@ -4,7 +4,7 @@ import type { AppProps } from 'next/app';
 import { useRouter } from 'next/router';
 import { AuthProvider } from '../contexts/AuthContext';
 
-const publicPaths = ['/login', '/register', '/forgot-password'];
+const publicPaths = ['/login', '/signup', '/forgot-password'];
 
 function LinkifyApp({ Component, pageProps }: AppProps) {
   const router = useRouter();

@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/router';
 
-const publicPaths = ['/login', '/register', '/forgot-password'];
+const publicPaths = ['/login', '/signup', '/forgot-password'];
 
 export function RouteGuard({ children }: { children: React.ReactNode }) {
     const router = useRouter();

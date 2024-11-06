@@ -17,16 +17,6 @@ const authMiddleware = (req, res, next) => {
     try {
         // Verify the token
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        
-        // Check if token is about to expire (e.g., within 1 hour)
-        const tokenExp = decoded.exp * 1000; // Convert to milliseconds
-        const now = Date.now();
-        const oneHour = 60 * 60 * 1000;
-
-        if (tokenExp - now < oneHour) {
-            // You might want to set a header indicating token will expire soon
-            res.set('X-Token-Expiring-Soon', 'true');
-        }
 
         // Attach decoded user to request
         req.user = {
@@ -38,14 +28,6 @@ const authMiddleware = (req, res, next) => {
         next();
     } catch (err) {
         console.error('Token verification error:', err.message);
-
-        if (err.name === 'TokenExpiredError') {
-            return res.status(401).json({ 
-                success: false,
-                error: 'Token has expired',
-                code: 'TOKEN_EXPIRED'
-            });
-        }
 
         if (err.name === 'JsonWebTokenError') {
             return res.status(401).json({ 
