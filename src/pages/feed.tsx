@@ -114,7 +114,7 @@ const Feed = () => {
 
     const handleLike = useCallback(async (postId: string) => {
         try {
-            const response = await fetch(`${API_URL}/posts/${postId}/like`, {
+            const response = await fetch(`api/posts/${postId}/like`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -131,7 +131,7 @@ const Feed = () => {
 
     const handleFollow = useCallback(async (userId: string) => {
         try {
-            const response = await fetch(`${API_URL}/users/${userId}/follow`, {
+            const response = await fetch(`api/users/${userId}/follow`, {
                 method: 'POST',
             });
             if (!response.ok) throw new Error('Failed to follow user');

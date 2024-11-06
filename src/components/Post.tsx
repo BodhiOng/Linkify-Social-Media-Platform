@@ -9,6 +9,7 @@ interface IPost {
     likes_count: number;
     comments_count: number;
     is_liked?: boolean;
+    is_following?: boolean;
 }
 
 interface PostProps {

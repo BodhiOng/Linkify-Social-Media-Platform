@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { getOrCreateModel } = require('../utils/mongoose');
 
 const notificationSchema = new mongoose.Schema({
     user_id: {
@@ -19,6 +20,10 @@ const notificationSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
+    post_image_url: {
+        type: String,
+        default: '',
+    },
     isRead: {
         type: Boolean,
         default: false,
@@ -29,4 +34,6 @@ const notificationSchema = new mongoose.Schema({
     },
 });
 
-module.exports = mongoose.model('Notification', notificationSchema);
+const Notification = getOrCreateModel('Notification', notificationSchema);
+
+module.exports = Notification;

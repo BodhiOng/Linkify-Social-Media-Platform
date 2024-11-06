@@ -21,7 +21,7 @@
     "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx"
-, "src/dbConnect.js"  ],
+, "src/dbConnect.js", "src/utils/mongoose.js"  ],
   "exclude": [
     "node_modules"
   ]
