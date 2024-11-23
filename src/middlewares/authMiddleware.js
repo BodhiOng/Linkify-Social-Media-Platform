@@ -20,7 +20,7 @@ const authMiddleware = (req, res, next) => {
 
         // Attach decoded user to request
         req.user = {
-            id: decoded.id,
+            userId: decoded.userId,
             username: decoded.username,
             email: decoded.email,
         };
