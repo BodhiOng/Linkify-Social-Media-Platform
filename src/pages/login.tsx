@@ -9,9 +9,12 @@ interface FormData {
 }
 
 interface LoginResponse {
-  success: boolean;
   message?: string;
   accessToken?: string;
+  user?: {
+    email: string;
+    username?: string;
+  };
 }
 
 const Login: React.FC = () => {
@@ -37,6 +40,10 @@ const Login: React.FC = () => {
     }
   }, [error.show]);
 
+  const isValidEmail = (email: string): boolean => {
+    const emailRegex =  /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  }
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>): void => {
     const { name, value } = e.target;
@@ -50,6 +57,14 @@ const Login: React.FC = () => {
     e.preventDefault();
     setIsLoading(true);
     setError({ show: false, message: '' });
+
+    if(!isValidEmail(formData.email)) {
+      setError({
+        show: true,
+        message: 'Please enter a valid email address'
+      });
+      return;
+    }
 
     const submitData = {
       email: formData.email.trim().toLowerCase(),
@@ -67,33 +82,22 @@ const Login: React.FC = () => {
 
       const data: LoginResponse = await response.json();
 
-      if (!response.ok || !data.success) {
+      if (!response.ok) {
         throw new Error(data.message || 'Invalid credentials');
       }
 
+      // Ensure access token exists
       if (!data.accessToken) {
         throw new Error('No access token received');
       }
 
       // Create user object
-      const user = {
-        email: submitData.email,
-      };
+      const user = data.user || { email: submitData.email };
 
-      try {
-        // Update auth context first
-        await login(user, data.accessToken);
+      await login(user, data.accessToken);
 
-        // Then store in localStorage
-        localStorage.setItem('user', JSON.stringify(user));
-        localStorage.setItem('token', data.accessToken);
-
-        // Navigate to feed
-        router.replace("/feed");
-      } catch (storageError) {
-        console.error('Storage/Auth error:', storageError);
-        throw new Error('Authentication failed');
-      }
+      // Navigate to feed
+      router.replace("/feed");
     } catch (error) {
       console.error("Login error:", error);
       setError({
@@ -124,6 +128,8 @@ const Login: React.FC = () => {
                   type="email"
                   name="email"
                   id="email"
+                  aria-label="Email address"
+                  aria-required="true"
                   value={formData.email}
                   onChange={handleChange}
                   className="w-full px-3 py-2 sm:px-4 sm:py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 mb-2"

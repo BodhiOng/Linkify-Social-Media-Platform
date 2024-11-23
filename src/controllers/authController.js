@@ -7,7 +7,6 @@ const JWT_SECRET = process.env.JWT_SECRET;
 
 // Register a new user
 exports.registerUser = async (req, res) => {
-    // Validate the incoming request based on validation rules set in the route
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         return res.status(400).json({ errors: errors.array() });
@@ -35,17 +34,9 @@ exports.registerUser = async (req, res) => {
         });
         await user.save();
 
-        // Create payload for the access token
+        // Create payload and generate permanent access token
         const payload = { userId: user.id };
-
-        // Generate short-lived access token (e.g., expires in 15 minutes)
-        const accessToken = jwt.sign(payload, JWT_SECRET, { expiresIn: '15m' });
-
-        // Generate refresh token (longer expiration, e.g., 7 days)
-        const refreshToken = jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' });
-
-        // Store refresh token securely (e.g., in database or an HTTP-only cookie)
-        res.cookie('refreshToken', refreshToken, { httpOnly: true, secure: process.env.NODE_ENV === 'production' });
+        const accessToken = jwt.sign(payload, JWT_SECRET);
 
         res.status(201).json({ message: 'Register successful', accessToken });
     } catch (err) {
@@ -76,20 +67,20 @@ exports.loginUser = async (req, res) => {
             return res.status(400).json({ error: 'Invalid credentials' });
         }
 
-        // Create payload for the access token
+        // Create payload and generate permanent access token
         const payload = { userId: user.id };
+        const accessToken = jwt.sign(payload, JWT_SECRET);
 
-        // Generate short-lived access token (e.g., expires in 15 minutes)
-        const accessToken = jwt.sign(payload, JWT_SECRET, { expiresIn: '15m' });
-
-        // Generate refresh token (longer expiration, e.g., 7 days)
-        const refreshToken = jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' });
-
-        // Store refresh token securely (e.g., in database or an HTTP-only cookie)
-        res.cookie('refreshToken', refreshToken, { httpOnly: true, secure: process.env.NODE_ENV === 'production' });
-
-        res.status(200).json({ message: 'Login successful', accessToken });
+        res.status(200).json({ 
+            message: 'Login successful', 
+            accessToken,
+            user: {
+                email: user.email,
+                username: user.username
+            }
+        });
     } catch (err) {
+        console.error('Login error: ', err);
         res.status(500).json({ error: err.message });
     }
 };
