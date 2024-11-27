@@ -4,6 +4,7 @@ interface LoginResponse {
     success: boolean;
     message?: string;
     accessToken?: string;
+    userId?: string;
 }
 
 
@@ -30,12 +31,14 @@ export default async function loginHandler(req: NextApiRequest, res: NextApiResp
                 return res.status(200).json({ 
                     success: true, 
                     message: "Login successful",
-                    accessToken: data.accessToken 
+                    accessToken: data.accessToken, 
+                    userId: data.user._id
                 });
             } else {
                 return res.status(400).json({ 
                     success: false, 
-                    message: data.message
+                    message: data.message,
+                    userId: ''
                 });
             }
         } catch (error) {

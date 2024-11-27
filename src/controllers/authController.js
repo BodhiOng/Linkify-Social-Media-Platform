@@ -88,6 +88,5 @@ exports.loginUser = async (req, res) => {
 
 // Log out the user
 exports.logoutUser = (req, res) => {
-    res.clearCookie('refreshToken');
     res.json({ message: "User logged out successfully" });
 };

@@ -11,10 +11,17 @@ interface FormData {
 interface LoginResponse {
   message?: string;
   accessToken?: string;
+  userId?: string;
   user?: {
     email: string;
     username?: string;
   };
+}
+
+interface UsernameLookupResponse {
+  username: string | null;
+  userId: string | null;
+  message?: string;
 }
 
 const Login: React.FC = () => {
@@ -45,6 +52,34 @@ const Login: React.FC = () => {
     return emailRegex.test(email);
   }
 
+  const getUsernameFromEmail = async (email: string): Promise<{ username: string | null, userId: string | null }> => {
+    try {
+      const response = await fetch ('/api/users/lookup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email })
+      });
+
+      const data: UsernameLookupResponse = await response.json();
+
+      if(!response.ok) {
+        console.error('Username lookup failed');
+        return { username: null, userId: null };
+      }
+
+      console.log('Username lookup response:', data);
+      return {
+        username: data.username,
+        userId: data.userId
+      };
+    } catch (error) {
+      console.error('Username lookup error:', error);
+      return { username: null, userId: null };
+    }
+  };
+
   const handleChange = (e: ChangeEvent<HTMLInputElement>): void => {
     const { name, value } = e.target;
     setFormData((prevData) => ({
@@ -63,6 +98,7 @@ const Login: React.FC = () => {
         show: true,
         message: 'Please enter a valid email address'
       });
+      setIsLoading(false);
       return;
     }
 
@@ -72,6 +108,12 @@ const Login: React.FC = () => {
     };
 
     try {
+      // Get username first
+      const { username, userId } = await getUsernameFromEmail(submitData.email);
+      console.log('Retrieved username:', username);
+      console.log('Retrieved userId:', userId);
+
+      // Proceed with login
       const response = await fetch('/api/login', {
         method: 'POST',
         headers: {
@@ -92,11 +134,19 @@ const Login: React.FC = () => {
       }
 
       // Create user object
-      const user = data.user || { email: submitData.email };
+      const user = { 
+        _id: userId || data.userId,
+        email: submitData.email,
+        username: username || undefined
+      };
+
+      console.log('Logged in user:', user);
+
+      // Store user data and token in local storage
+      localStorage.setItem('user', JSON.stringify(user));
+      localStorage.setItem('token', data.accessToken);
 
       await login(user, data.accessToken);
-
-      // Navigate to feed
       router.replace("/feed");
     } catch (error) {
       console.error("Login error:", error);

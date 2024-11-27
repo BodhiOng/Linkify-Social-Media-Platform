@@ -7,9 +7,9 @@ interface User {
 }
 
 interface AuthContextType {
-    user: any | null;
+    user: User | null;
     token: string | null;
-    login: (userData: any, token: string) => void;
+    login: (userData: User, token: string) => void;
     logout: () => void;
     isAuthenticated: boolean;
     isLoading: boolean;
@@ -39,32 +39,26 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
     useEffect(() => {
         const initializeAuth = () => {
-            try {
-                const storedUser = localStorage.getItem('user');
-                const storedToken = localStorage.getItem('token');
+            const storedUser = localStorage.getItem('user');
+            const storedToken = localStorage.getItem('token');
 
-                console.log('Initializing Auth:', { storedUser, storedToken });
+            console.log('Initializing Auth:', { storedUser, storedToken });
 
-                if (storedToken && storedUser) {
-                    const parsedUser = JSON.parse(storedUser);
+            if (storedToken && storedUser) {
+                try {
+                    const parsedUser: User = JSON.parse(storedUser);
                     setUser(parsedUser);
                     setToken(storedToken);
                     setIsAuthenticated(true);
-                } else {
-                    // If no token or user, ensure we're logged out
-                    setUser(null);
-                    setToken(null);
-                    setIsAuthenticated(false);
+                    console.log('User ID from local storage:', parsedUser._id);
+                } catch (error) {
+                    console.error("Error parsing user data:", error);
+                    logout();
                 }
-            } catch (error) {
-                console.error('Auth initialization error:', error);
-                // On error, ensure we're logged out
-                setUser(null);
-                setToken(null);
-                setIsAuthenticated(false);
-            } finally {
-                setIsLoading(false);
+            } else {
+                logout();
             }
+            setIsLoading(false);
         };
 
         if (typeof window !== 'undefined') {

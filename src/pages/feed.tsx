@@ -11,8 +11,13 @@ interface IPost {
     content: string;
     username: string;
     image_url: string;
+    likes?: string[];
     likes_count: number;
     comments_count: number;
+    is_liked?: boolean;
+    is_following?: boolean;
+    createdAt: string;
+    updatedAt: string;
 }
 
 interface FeedResponse {
@@ -59,7 +64,6 @@ const Feed = () => {
 
     const fetchPosts = useCallback(async (pageNum: number) => {
         if (!token) return; // Don't fetch if no token
-
         try {
             setIsLoading(true);
             const response = await fetch(`${API_URL}/feed?page=${pageNum}`, {
@@ -80,6 +84,8 @@ const Feed = () => {
             }
 
             const data: FeedResponse = await response.json();
+            console.log('Fetched posts:', data.posts); // Log the fetched posts
+            
             if (pageNum === 1) {
                 setPosts(data.posts);
             } else {
@@ -123,11 +129,31 @@ const Feed = () => {
             });
             if (!response.ok) throw new Error('Failed to like post');
 
+            // Optimistically update the posts with safe checks
+            setPosts(prevPosts => 
+                prevPosts.map(post =>
+                    post._id === postId
+                    ? {
+                        ...post,
+                        // Ensure likes is always an array
+                        likes: post.likes 
+                            ? (post.likes.includes(user._id)
+                                ? post.likes.filter(id => id !== user._id)
+                                : [...post.likes, user._id])
+                            : [user._id],
+                        likes_count: post.likes?.includes(user._id)
+                            ? (post.likes_count - 1)
+                            : (post.likes_count + 1)
+                    }
+                    : post
+                )
+            );
+
             return response.json();
         } catch (error) {
             console.error('Like error:', error);
         }
-    }, []);
+    }, [token, user]);
 
     const handleFollow = useCallback(async (userId: string) => {
         try {
