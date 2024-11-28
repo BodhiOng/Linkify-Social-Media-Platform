@@ -69,7 +69,6 @@ const Login: React.FC = () => {
         return { username: null, userId: null };
       }
 
-      console.log('Username lookup response:', data);
       return {
         username: data.username,
         userId: data.userId
@@ -110,8 +109,6 @@ const Login: React.FC = () => {
     try {
       // Get username first
       const { username, userId } = await getUsernameFromEmail(submitData.email);
-      console.log('Retrieved username:', username);
-      console.log('Retrieved userId:', userId);
 
       // Proceed with login
       const response = await fetch('/api/login', {
@@ -139,8 +136,6 @@ const Login: React.FC = () => {
         email: submitData.email,
         username: username || undefined
       };
-
-      console.log('Logged in user:', user);
 
       // Store user data and token in local storage
       localStorage.setItem('user', JSON.stringify(user));

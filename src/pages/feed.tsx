@@ -159,10 +159,27 @@ const Feed = () => {
         try {
             const response = await fetch(`api/users/${userId}/follow`, {
                 method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
             });
+
             if (!response.ok) throw new Error('Failed to follow user');
+
+            // Optimistically update the posts
+            setPosts(prevPosts => 
+                prevPosts.map(post =>
+                    post.user_id === userId
+                        ? {...post, is_following: !post.is_following}
+                        : post
+                )
+            );
+            
+            return response.json();
         } catch (error) {
             console.error('Follow error:', error);
+            throw error;
         }
     }, []);
 

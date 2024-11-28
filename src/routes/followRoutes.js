@@ -3,11 +3,8 @@ const router = express.Router();
 const followController = require('../controllers/followController');
 const verifyToken = require('../middlewares/authMiddleware');
 
-// Follow a user
-router.post('/', verifyToken, followController.followUser);
-
-// Unfollow a user
-router.delete('/', verifyToken, followController.unfollowUser);
+// Toggle follow
+router.post('/toggle', verifyToken, followController.toggleFollow);
 
 // Get followers of a user
 router.get('/followers/:username', followController.getFollowers);

@@ -30,16 +30,13 @@ const Post: React.FC<PostProps> = ({ post, onLike, onFollow, onComment }) => {
     const [isLiked, setIsLiked] = useState(false);
     const [likesCount, setLikesCount] = useState(post.likes_count || 0);
     const [isLoading, setIsLoading] = useState(false);
+    const [isFollowing, setIsFollowing] = useState(post.is_following || false);
+    const [isFollowLoading, setIsFollowLoading] = useState(false);
 
     // Update effect to always check likes array first
     useEffect(() => {
-        console.log('User:', user); // Debugging log
-        console.log('Post Likes:', post.likes); // Debugging log
-
         if (user) {
-            console.log("User ID:", user._id);
             const likedByUser = post.likes?.includes(user._id) || post.is_liked || false;
-            console.log('Liked by User:', likedByUser); // Debugging log
             setIsLiked(likedByUser);
         } else {
             setIsLiked(false);
@@ -71,12 +68,24 @@ const Post: React.FC<PostProps> = ({ post, onLike, onFollow, onComment }) => {
     }, [isLiked, onLike, isLoading, user, post.likes, post.likes_count]);
 
     const handleFollow = useCallback(async () => {
+        if (isFollowLoading || !user) return;
+
         try {
+            setIsFollowLoading(true);
+            const newFollowState = !isFollowing;
+
+            // Optimistic update
+            setIsFollowing(newFollowState);
+
+            // Make API call
             await onFollow();
         } catch (error) {
             console.error('Error handling follow:', error);
+            setIsFollowing(post.is_following || false);
+        } finally {
+            setIsFollowLoading(false);
         }
-    }, [onFollow]);
+    }, [isFollowing, onFollow, isFollowLoading, user, post.is_following]);
 
     const handleComment = useCallback(async () => {
         try {
@@ -100,10 +109,17 @@ const Post: React.FC<PostProps> = ({ post, onLike, onFollow, onComment }) => {
                 </div>
             </div>
             <button
-                className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-1 rounded-full text-sm"
-                onClick={onFollow}
+                className={`
+                    ${isFollowing
+                        ? 'bg-gray-600 text-white'
+                        : 'bg-blue-500 hover:bg-blue-600 text-white'
+                    }
+                    px-4 py-1 rounded-full text-sm
+                `}
+                onClick={handleFollow}
+                disabled={isFollowLoading}
             >
-                Follow
+                {isFollowing ? 'Following' : 'Follow'}
             </button>
         </div>
 

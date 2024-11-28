@@ -1,9 +1,12 @@
 const Follow = require('../models/followModel');
 const User = require('../models/userModel');
 const Notification = require('../models/notificationModel');
+const { default: mongoose } = require('mongoose');
 
-// Follow a user
-exports.followUser = async (req, res) => {
+exports.toggleFollow = async (req, res) => {
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
     try {
         const followerId = req.user.userId;
         const { followingUsername } = req.body;
@@ -12,66 +15,85 @@ exports.followUser = async (req, res) => {
         const follower = await User.findById(followerId);
         const following = await User.findOne({ username: followingUsername });
 
-        // Check the follower and the followed user existence
-        if (!follower) {
-            return res.status(400).json({ error: 'Follower not found' });
+        if (!follower || !following) {
+            await session.abortTransaction();
+            session.endSession();
+            return res.status(400).json({ error: 'User not found' });
         }
 
-        if (!following) {
-            return res.status(400).json({ error: 'User to follow not found' });
+        if(follower._id.equals(following._id)) {
+            return res.status(400).json({ error: 'You cannot follow yourself' });
         }
 
-        //  Check if the follower is already following the user
-        const existingFollow = await Follow.findOne({ follower_id: follower._id, following_id: following._id});
-        if (existingFollow) {
-            return res.status(400).json({ error: 'You are already following this user'});
-        }
-
-        // Create and save a new follow relationship
-        const follow = new Follow({ follower_id: follower._id, following_id: following._id });
-        await follow.save();
-
-        // Create a notification for the user being followed
-        const notification = new Notification({
-            user_id: following._id,
-            type: 'follow',
-            entity_id: follower._id, 
-            message: `${follower.username} started following you`,
+        // Check existing follow relationship
+        const existingFollow = await Follow.findOne({
+            follower_id: follower._id,
+            following_id: following._id
         });
-        await notification.save();
 
-        res.status(201).json(follow);
+        if (existingFollow) {
+            // Unfollow
+            await Follow.findOneAndDelete({
+                follower_id: follower._id,
+                following_id: following._id
+            });
+
+            // Remove from followers and following arrays
+            await User.findByIdAndUpdate({
+                $pull: { followers: follower._id }
+            });
+
+            await User.findByIdAndUpdate({
+                $pull: { following: following._id }
+            })
+
+            await session.commitTransaction();
+            session.endSession();
+
+            return res.status(200).json({
+                message: 'Successfully unfollowed user',
+                isFollowing: false
+            });
+        } else {
+            // Follow
+            const newFollow = new Follow({
+                follower_id: follower._id,
+                following_id: following._id
+            });
+            await newFollow.save();
+
+            // Add to followers and following arrays
+            await User.findByIdAndUpdate(following._id, {
+                $addToSet: { followers: follower._id }
+            });
+
+            await User.findByIdAndUpdate(follower._id, {
+                $addToSet: { following: following._id }
+            });
+
+            // Create notification
+            const notification = new Notification({
+                user_id: following._id,
+                type: 'follow',
+                entity_id: follower._id,
+                message: `${follower.username} started following you`
+            });
+            await notification.save();
+
+            await session.commitTransaction();
+            session.endSession();
+
+            return res.status(201).json({
+                message: 'Successfully followed user',
+                isFollowing: true
+            });
+        } 
     } catch (err) {
+        await session.abortTransaction();
+        session.endSession();
         res.status(400).json({ error: err.message });
     }
-};
-
-// Unfollow a user
-exports.unfollowUser = async (req, res) => {
-    try {
-        const followerId = req.user.userId;
-        const { followingUsername } = req.body;
-
-        // Find the follower and the user being followed
-        const follower = await User.findById(followerId);
-        const following = await User.findOne({ username: followingUsername });
-
-        // Check followed user's existence
-        if (!following) {
-            res.status(400).json({ error: 'User to unfollow not found' });
-        }
-
-        //  Find and delete the follow relationship
-        const follow = await Follow.findOneAndDelete({ follower_id: follower._id, following_id: following._id });
-        if (!follow) {
-            return res.status(404).json({ error: 'Follow relationship not found.' });
-        }
-
-        res.json({ message: 'Successfully unfollowed the user.' });
-    } catch (err) {
-        res.status(400).json({ error: err.message });
-    }
-};
+}
 
 // Get a list of a user's followers
 exports.getFollowers = async (req, res) => {
